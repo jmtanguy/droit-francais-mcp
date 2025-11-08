@@ -11,11 +11,12 @@ Pour exécuter les tests:
 """
 
 import pytest
-from api_legifrance import LegiFranceAPI
 
+from api_legifrance import LegiFranceAPI
 
 # Marquer tous les tests comme tests d'intégration car ils appellent l'API réelle
 pytestmark = pytest.mark.integration
+
 
 # Fixture pour partager une instance de l'API entre tous les tests
 @pytest.fixture(scope="module")
@@ -25,7 +26,6 @@ def api():
     L'instance est créée une seule fois au début et réutilisée pour tous les tests.
     """
     return LegiFranceAPI(sandbox=True)
-
 
 
 def test_init_sandbox(api):
@@ -59,12 +59,7 @@ def test_token_caching(api):
 def test_search_simple(api):
     """Test une recherche simple dans le Code civil"""
 
-    results = api.search(
-        query="mariage",
-        fond="CODE_ETAT",
-        code_name="Code civil",
-        page_size=5
-    )
+    results = api.search(query="mariage", fond="CODE_ETAT", code_name="Code civil", page_size=5)
 
     assert results is not None, "Les résultats ne doivent pas être None"
     assert len(results) > 0, "La liste de résultats ne doit pas être vide"
@@ -78,11 +73,10 @@ def test_search_with_filters(api):
         fond="JORF",
         type_recherche="UN_DES_MOTS",
         filtres_valeurs={"NATURE": ["LOI"]},
-        page_size=3
+        page_size=3,
     )
 
     assert results is not None
- 
 
     # Vérifier que les résultats ont des données valides
     if len(results) > 0:
@@ -96,37 +90,21 @@ def test_search_with_date_filters(api):
     results = api.search(
         query="environnement",
         fond="JORF",
-        filtres_dates={
-            "DATE_SIGNATURE": {
-                "start": "2020-01-01",
-                "end": "2023-12-31"
-            }
-        },
-        page_size=5
+        filtres_dates={"DATE_SIGNATURE": {"start": "2020-01-01", "end": "2023-12-31"}},
+        page_size=5,
     )
 
     assert results is not None
- 
 
 
 def test_search_pagination(api):
     """Test la pagination des résultats"""
 
     # Première page
-    results_page1 = api.search(
-        query="contrat",
-        fond="CODE_ETAT",
-        page_number=1,
-        page_size=3
-    )
+    results_page1 = api.search(query="contrat", fond="CODE_ETAT", page_number=1, page_size=3)
 
     # Deuxième page
-    results_page2 = api.search(
-        query="contrat",
-        fond="CODE_ETAT",
-        page_number=2,
-        page_size=3
-    )
+    results_page2 = api.search(query="contrat", fond="CODE_ETAT", page_number=2, page_size=3)
 
     assert results_page1 is not None
     assert results_page2 is not None
@@ -141,29 +119,17 @@ def test_search_pagination(api):
 def test_search_exact_match(api):
     """Test la recherche exacte"""
 
-    results = api.search(
-        query="Code civil",
-        fond="CODE_ETAT",
-        type_recherche="EXACTE",
-        page_size=5
-    )
+    results = api.search(query="Code civil", fond="CODE_ETAT", type_recherche="EXACTE", page_size=5)
 
     assert results is not None
- 
 
 
 def test_search_in_title(api):
     """Test la recherche dans les titres uniquement"""
 
-    results = api.search(
-        query="pénal",
-        fond="CODE_ETAT",
-        type_champ="TITLE",
-        page_size=5
-    )
+    results = api.search(query="pénal", fond="CODE_ETAT", type_champ="TITLE", page_size=5)
 
     assert results is not None
-
 
 
 def test_article_legiarti(api):
@@ -171,16 +137,12 @@ def test_article_legiarti(api):
 
     # D'abord faire une recherche pour obtenir un ID valide
     search_results = api.search(
-        query="mariage",
-        fond="CODE_ETAT",
-        code_name="Code civil",
-        page_size=1
+        query="mariage", fond="CODE_ETAT", code_name="Code civil", page_size=1
     )
 
     # Si on a des résultats, essayer de récupérer plus de détails
     # Note: cet exemple peut nécessiter d'ajuster selon la structure réelle des résultats
     assert search_results is not None
- 
 
 
 def test_article_legitext(api):
@@ -201,30 +163,21 @@ def test_search_invalid_fond(api):
     """Test qu'une erreur est levée pour un fond invalide"""
 
     with pytest.raises(ValueError, match="Fond invalide"):
-        api.search(
-            query="test",
-            fond="INVALID_FOND"
-        )
+        api.search(query="test", fond="INVALID_FOND")
 
 
 def test_search_invalid_type_recherche(api):
     """Test qu'une erreur est levée pour un type de recherche invalide"""
 
     with pytest.raises(ValueError, match="Type de recherche invalide"):
-        api.search(
-            query="test",
-            type_recherche="INVALID_TYPE"
-        )
+        api.search(query="test", type_recherche="INVALID_TYPE")
 
 
 def test_search_invalid_type_champ(api):
     """Test qu'une erreur est levée pour un type de champ invalide"""
 
     with pytest.raises(ValueError, match="Type de champ invalide"):
-        api.search(
-            query="test",
-            type_champ="INVALID_CHAMP"
-        )
+        api.search(query="test", type_champ="INVALID_CHAMP")
 
 
 def test_search_no_query(api):
@@ -238,50 +191,31 @@ def test_search_invalid_operator(api):
     """Test qu'une erreur est levée pour un opérateur invalide"""
 
     with pytest.raises(ValueError, match="L'opérateur doit être"):
-        api.search(
-            query="test",
-            operateur="INVALID"
-        )
+        api.search(query="test", operateur="INVALID")
 
 
 def test_search_with_sort(api):
     """Test la recherche avec tri personnalisé"""
 
-    results = api.search(
-        query="loi",
-        fond="JORF",
-        sort="SIGNATURE_DATE_DESC",
-        page_size=5
-    )
+    results = api.search(query="loi", fond="JORF", sort="SIGNATURE_DATE_DESC", page_size=5)
 
     assert results is not None
- 
 
 
 def test_search_kali_conventions(api):
     """Test la recherche dans les conventions collectives"""
 
-    results = api.search(
-        query="télétravail",
-        fond="KALI",
-        page_size=3
-    )
+    results = api.search(query="télétravail", fond="KALI", page_size=3)
 
     assert results is not None
-
 
 
 def test_search_jurisprudence(api):
     """Test la recherche dans la jurisprudence"""
 
-    results = api.search(
-        query="responsabilité",
-        fond="JURI",
-        page_size=3
-    )
+    results = api.search(query="responsabilité", fond="JURI", page_size=3)
 
     assert results is not None
-  
 
 
 if __name__ == "__main__":
