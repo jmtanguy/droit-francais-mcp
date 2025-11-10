@@ -12,12 +12,14 @@ Remarques :
    et d’outils d’intelligence artificielle.
 """
 
-import requests
-from datetime import datetime, timedelta
 import os
-from typing import Optional, Dict, Any, List
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
+import requests
 from dotenv import load_dotenv
-from api_legifrance_search_input  import LegiFranceSearchInput
+
+from api_legifrance_search_input import LegiFranceSearchInput
 from api_legifrance_search_output import LegiFranceSearchOutput
 
 
@@ -25,37 +27,50 @@ class LegiFranceAPI:
     """
     Client pour l'API Légifrance
     """
-    
+
     def __init__(self, sandbox: bool = True):
         """
         Initialise le client
-        
+
         Args:
             sandbox: Utiliser l'environnement sandbox (True) ou production (False) de l 'API PISTE
         """
-        load_dotenv(verbose=False) # Charger les variables d'environnement depuis le fichier .env
+        load_dotenv(verbose=False)  # Charger les variables d'environnement depuis le fichier .env
         if sandbox:
             self.client_id = os.getenv("PISTE_SANDBOX_CLIENT_ID")
             self.client_secret = os.getenv("PISTE_SANDBOX_CLIENT_SECRET")
-            self.token_url = 'https://sandbox-oauth.piste.gouv.fr/api/oauth/token'
+            self.token_url = "https://sandbox-oauth.piste.gouv.fr/api/oauth/token"
             self.base_url = "https://sandbox-api.piste.gouv.fr"
+            if not self.client_id or not self.client_secret:
+                raise ValueError(
+                    "Les identifiants PISTE Sandbox sont manquants. "
+                    "Veuillez définir PISTE_SANDBOX_CLIENT_ID et PISTE_SANDBOX_CLIENT_SECRET "
+                    "dans votre fichier .env. "
+                    "Consultez .env.example pour un exemple de configuration."
+                )
         else:
             self.client_id = os.getenv("PISTE_CLIENT_ID")
             self.client_secret = os.getenv("PISTE_CLIENT_SECRET")
-            self.token_url = 'https://sandbox-oauth.piste.gouv.fr/api/oauth/token'
-            self.base_url = "https://sandbox-api.piste.gouv.fr"
+            self.token_url = "https://oauth.piste.gouv.fr/api/oauth/token"
+            self.base_url = "https://api.piste.gouv.fr"
+            if not self.client_id or not self.client_secret:
+                raise ValueError(
+                    "Les identifiants PISTE Production sont manquants. "
+                    "Veuillez définir PISTE_CLIENT_ID et PISTE_CLIENT_SECRET "
+                    "dans votre fichier .env. "
+                    "Consultez .env.example pour un exemple de configuration."
+                )
 
         self.api_url = f"{self.base_url}/dila/legifrance/lf-engine-app"
-        
+
         # Stockage du token
         self.access_token = None
         self.token_expires_at = None
-    
-    
+
     def get_access_token(self) -> str:
         """
         Obtient un token d'accès via OAuth 2.0 Client Credentials
-        
+
         Returns:
             Token d'accès
         """
@@ -64,59 +79,127 @@ class LegiFranceAPI:
             if datetime.now() < self.token_expires_at:
                 return self.access_token
 
-        data = {
-            "Accept-Encoding": "gzip,deflate",
+        # Headers pour la requête OAuth
+        headers = {
             "Content-Type": "application/x-www-form-urlencoded",
-            "Host": self.token_url.replace('https://', '').split('/')[0],
-            "Connection": "Keep-Alive",
+            "Accept": "application/json",
+        }
+
+        # Données de la requête OAuth 2.0 Client Credentials
+        data = {
             "grant_type": "client_credentials",
             "client_id": self.client_id,
             "client_secret": self.client_secret,
-            "scope": "openid"
+            "scope": "openid",
         }
 
         try:
-            response = requests.post(self.token_url,  data=data)
+            response = requests.post(self.token_url, headers=headers, data=data)
             response.raise_for_status()
-            
+
             token_data = response.json()
-            self.access_token = token_data['access_token']
-            
+            self.access_token = token_data["access_token"]
+
             # Calculer l'expiration du token (avec marge de sécurité)
-            expires_in = token_data.get('expires_in', 3600)
+            expires_in = token_data.get("expires_in", 3600)
             self.token_expires_at = datetime.now() + timedelta(seconds=expires_in - 60)
-            
+
             return self.access_token
-            
+
         except requests.exceptions.RequestException as e:
             raise Exception(f"Erreur lors de l'obtention du token: {e}")
-    
+
     def _get_api_headers(self) -> Dict[str, str]:
         """
         Génère les en-têtes pour les appels API
         """
         token = self.get_access_token()
-        return {
-            'Authorization': f'Bearer {token}',
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
         }
-    
+        return headers
 
+    def test_connection(self) -> Dict[str, Any]:
+        """
+        Teste la connexion à l'API en vérifiant que le token est valide.
+        Cette méthode peut être utilisée pour diagnostiquer les problèmes d'authentification.
 
-    def search(self,
-               query: Optional[str] = None,
-               fond: Optional[str] = None,
-               type_champ: str = "ALL",
-               type_recherche: str = "UN_DES_MOTS",
-               code_name: Optional[str] = None,
-               filtres_valeurs: Optional[Dict[str, List[str]]] = None,
-               filtres_dates: Optional[Dict[str, Dict[str, str]]] = None,
-               page_number: int = 1,
-               page_size: int = 10,
-               sort: Optional[str] = None,
-               operateur: str = "ET",
-               advanced_search: bool = False) -> List[Dict[str, Any]]:
+        Returns:
+            Dict contenant les informations de connexion et le statut
+
+        Raises:
+            Exception: Si la connexion échoue
+        """
+        try:
+            token = self.get_access_token()
+            token_preview = f"{token[:10]}...{token[-10:]}" if len(token) > 20 else "***"
+
+            result = {
+                "status": "success",
+                "base_url": self.base_url,
+                "api_url": self.api_url,
+                "token_obtained": True,
+                "token_preview": token_preview,
+                "token_expires_at": (
+                    self.token_expires_at.isoformat() if self.token_expires_at else None
+                ),
+                "message": "Token obtenu avec succès. Vérifiez votre abonnement à l'API Légifrance sur https://piste.gouv.fr/ si vous obtenez des erreurs 403.",
+            }
+            return result
+        except Exception as e:
+            return {
+                "status": "error",
+                "error": str(e),
+                "message": "Échec de l'obtention du token. Vérifiez vos identifiants dans le fichier .env",
+            }
+
+    def ping(self) -> str:
+        """
+        Teste la connexion à l'endpoint de recherche avec un simple ping.
+        Retourne "pong" si la connexion fonctionne.
+
+        Returns:
+            "pong" si la connexion réussit
+
+        Raises:
+            Exception: Si le ping échoue
+        """
+        endpoint = f"{self.api_url}/search/ping"
+
+        try:
+            response = requests.get(endpoint, headers=self._get_api_headers())
+            response.raise_for_status()
+            return response.text.strip()
+        except requests.exceptions.HTTPError as e:
+            error_msg = f"Erreur HTTP {e.response.status_code} lors du ping"
+            if e.response.status_code == 403:
+                error_msg += "\n⚠️ Erreur 403: Votre compte n'est probablement pas abonné à l'API Légifrance sur https://piste.gouv.fr/"
+            try:
+                error_details = e.response.text[:200]
+                error_msg += f"\nRéponse: {error_details}"
+            except:
+                pass
+            raise Exception(error_msg)
+        except requests.exceptions.RequestException as e:
+            raise Exception(f"Erreur lors du ping: {e}")
+
+    def search(
+        self,
+        query: Optional[str] = None,
+        fond: Optional[str] = None,
+        type_champ: str = "ALL",
+        type_recherche: str = "UN_DES_MOTS",
+        code_name: Optional[str] = None,
+        filtres_valeurs: Optional[Dict[str, List[str]]] = None,
+        filtres_dates: Optional[Dict[str, Dict[str, str]]] = None,
+        page_number: int = 1,
+        page_size: int = 10,
+        sort: Optional[str] = None,
+        operateur: str = "ET",
+        advanced_search: bool = False,
+    ) -> List[Dict[str, Any]]:
         """
         Effectue une recherche dans l'API Légifrance avec support complet de toutes les fonctionnalités.
 
@@ -223,7 +306,7 @@ class LegiFranceAPI:
                 Défaut: False
 
         Returns:
-            Liste des résultats: [                    
+            Liste des résultats: [
                         {
                             "id": str,
                             "title": str,
@@ -236,7 +319,7 @@ class LegiFranceAPI:
                         },
                         ...
                     ]
-                
+
 
         Raises:
             ValueError: Si ni query ni search_input n'est fourni
@@ -303,7 +386,6 @@ class LegiFranceAPI:
         """
         endpoint = f"{self.api_url}/search"
 
-
         # Mode simple : construire la requête à partir des paramètres
         if query is None:
             raise ValueError("Le paramètre 'query' doit être fourni")
@@ -313,22 +395,28 @@ class LegiFranceAPI:
         # Définir le fonds (avec valeur par défaut)
         fond = fond or "CODE_ETAT"
         if fond not in queryBuilder.FONDS.values():
-            raise ValueError(f"Fond invalide. Utilisez une des valeurs: {list(queryBuilder.FONDS.values())}")
+            raise ValueError(
+                f"Fond invalide. Utilisez une des valeurs: {list(queryBuilder.FONDS.values())}"
+            )
         queryBuilder.set_fond(fond)
 
         # Valider et créer le critère de recherche
         if type_recherche not in queryBuilder.TYPE_RECHERCHE.values():
-            raise ValueError(f"Type de recherche invalide. Utilisez une des valeurs: {list(queryBuilder.TYPE_RECHERCHE.values())}")
+            raise ValueError(
+                f"Type de recherche invalide. Utilisez une des valeurs: {list(queryBuilder.TYPE_RECHERCHE.values())}"
+            )
 
         if type_champ not in queryBuilder.TYPE_CHAMP.values():
-            raise ValueError(f"Type de champ invalide. Utilisez une des valeurs: {list(queryBuilder.TYPE_CHAMP.values())}")
+            raise ValueError(
+                f"Type de champ invalide. Utilisez une des valeurs: {list(queryBuilder.TYPE_CHAMP.values())}"
+            )
 
         critere = queryBuilder.create_critere(query, type_recherche)
         queryBuilder.add_champ(type_champ, [critere])
 
         # Ajouter le filtre pour le nom du code si applicable
         if (fond in ["CODE_ETAT", "CODE_DATE"]) and code_name:
-            queryBuilder.add_filtre_valeurs('TEXT_NOM_CODE', [code_name])
+            queryBuilder.add_filtre_valeurs("TEXT_NOM_CODE", [code_name])
 
         # Ajouter les filtres par valeurs
         if filtres_valeurs:
@@ -363,11 +451,7 @@ class LegiFranceAPI:
         payload = queryBuilder.build()
 
         try:
-            response = requests.post(
-                endpoint,
-                headers=self._get_api_headers(),
-                json=payload
-            )
+            response = requests.post(endpoint, headers=self._get_api_headers(), json=payload)
             response.raise_for_status()
 
             searchExtractor = LegiFranceSearchOutput()
@@ -375,12 +459,36 @@ class LegiFranceAPI:
             summary = searchExtractor.extract_full_summary(json)
             return summary
 
+        except requests.exceptions.HTTPError as e:
+            # Améliorer le message d'erreur avec les détails de la réponse
+            error_msg = f"Erreur HTTP {e.response.status_code}: {e}"
+
+            # Ajouter les en-têtes de réponse pour le débogage
+            if e.response.status_code == 403:
+                error_msg += "\n\n⚠️ Erreur 403 Forbidden - Causes possibles:"
+                error_msg += "\n1. Votre compte sandbox n'est pas abonné à l'API Légifrance"
+                error_msg += "\n2. Les permissions nécessaires ne sont pas activées"
+                error_msg += "\n3. Vérifiez votre abonnement sur https://piste.gouv.fr/"
+
+            try:
+                error_details = e.response.json()
+                if isinstance(error_details, dict):
+                    error_msg += f"\n\nDétails de la réponse API: {error_details}"
+                    # Si l'API retourne un message d'erreur spécifique
+                    if "message" in error_details:
+                        error_msg += f"\nMessage: {error_details['message']}"
+                    if "error" in error_details:
+                        error_msg += f"\nErreur: {error_details['error']}"
+            except:
+                error_msg += f"\n\nRéponse brute: {e.response.text[:500]}"
+
+            # Ajouter les en-têtes de réponse pour le débogage
+            error_msg += f"\n\nEn-têtes de réponse: {dict(e.response.headers)}"
+
+            raise Exception(f"Erreur lors de la recherche: {error_msg}")
         except requests.exceptions.RequestException as e:
             raise Exception(f"Erreur lors de la recherche: {e}")
-        
 
-
-    
     def article(self, article_id: str) -> Dict[str, Any]:
         """
         Récupère un article spécifique.
@@ -396,56 +504,50 @@ class LegiFranceAPI:
 
         if article_id.startswith("LEGIARTI"):
             # Articles de loi
-            endpoint =  f"{self.api_url}/consult/getArticle"
+            endpoint = f"{self.api_url}/consult/getArticle"
             params = {"id": article_id}
 
-        elif article_id.startswith("LEGITEXT") :
+        elif article_id.startswith("LEGITEXT"):
             # Textes légaux consolidés
             endpoint = f"{self.api_url}/consult/legiPart"
             params = {"textId": article_id}
 
         elif article_id.startswith("JURITEXT"):
-            # Jurisprudence 
+            # Jurisprudence
             endpoint = f"{self.api_url}/consult/juri"
             params = {"textId": article_id}
 
-        elif article_id.startswith("CNILTEXT") :
+        elif article_id.startswith("CNILTEXT"):
             endpoint = f"{self.api_url}/consult/cnil"
             params = {"textId": article_id}
 
-        elif article_id.startswith("KALITEXT") :
+        elif article_id.startswith("KALITEXT"):
             # Conventions collectives
             endpoint = f"{self.api_url}/consult/kaliText"
             params = {"id": article_id}
 
-        elif article_id.startswith("KALIARTI") :
+        elif article_id.startswith("KALIARTI"):
             # Conventions collectives
             endpoint = f"{self.api_url}/consult/kaliArticle"
             params = {"id": article_id}
 
-        elif article_id.startswith("ACCOTEXT") :
+        elif article_id.startswith("ACCOTEXT"):
             endpoint = f"{self.api_url}/consult/acco"
             params = {"id": article_id}
 
         else:
             # Journal officiel par defaut
-            endpoint =  f"{self.api_url}/consult/jorf"
+            endpoint = f"{self.api_url}/consult/jorf"
             params = {"textCid": article_id}
 
         try:
-            response = requests.post(
-                endpoint,
-                headers=self._get_api_headers(),
-                json=params
-            )
+            response = requests.post(endpoint, headers=self._get_api_headers(), json=params)
             response.raise_for_status()
             api_response = response.json()
             return api_response
 
         except requests.exceptions.RequestException as e:
             raise Exception(f"Erreur lors de la récupération de l'article: {e}")
-
-
 
 
 # La fonction main() a été déplacée vers test_api.py pour éviter les conflits avec FastMCP (pas de print() dans un module importé)

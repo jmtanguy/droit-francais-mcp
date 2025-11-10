@@ -32,8 +32,8 @@ Pour exécuter les tests:
 """
 
 import pytest
-from api_judilibre import JudiLibreAPI
 
+from api_judilibre import JudiLibreAPI
 
 # Marquer tous les tests comme tests d'intégration car ils appellent l'API réelle
 pytestmark = pytest.mark.integration
@@ -80,80 +80,51 @@ def test_token_caching(api):
 def test_search_simple(api):
     """Test une recherche simple"""
 
-    results = api.search(
-        query="responsabilité",
-        page_size=5
-    )
+    results = api.search(query="responsabilité", page_size=5)
 
     assert results is not None, "Les résultats ne doivent pas être None"
-   
 
 
 def test_search_with_field_filter(api):
     """Test une recherche sur des champs spécifiques"""
 
-    results = api.search(
-        query="dommages",
-        field=["motivations", "dispositif"],
-        page_size=3
-    )
+    results = api.search(query="dommages", field=["motivations", "dispositif"], page_size=3)
 
     assert results is not None
-
-
 
 
 def test_search_with_operator_and(api):
     """Test une recherche avec l'opérateur AND"""
 
-    results = api.search(
-        query="responsabilité contractuelle",
-        operator="and",
-        page_size=5
-    )
+    results = api.search(query="responsabilité contractuelle", operator="and", page_size=5)
 
     assert results is not None
- 
 
 
 def test_search_with_operator_exact(api):
     """Test une recherche exacte"""
 
-    results = api.search(
-        query="Cour de cassation",
-        operator="exact",
-        page_size=5
-    )
+    results = api.search(query="Cour de cassation", operator="exact", page_size=5)
 
     assert results is not None
- 
 
 
 def test_search_with_date_range(api):
     """Test une recherche avec intervalle de dates"""
 
     results = api.search(
-        query="divorce",
-        date_start="2020-01-01",
-        date_end="2023-12-31",
-        page_size=5
+        query="divorce", date_start="2020-01-01", date_end="2023-12-31", page_size=5
     )
 
     assert results is not None
-   
 
 
 def test_search_with_type_filter(api):
     """Test une recherche filtrée par type de décision"""
 
-    results = api.search(
-        query="contrat",
-        type=["arret"],
-        page_size=5
-    )
+    results = api.search(query="contrat", type=["arret"], page_size=5)
 
     assert results is not None
-  
 
 
 def test_search_with_chamber_civ1(api):
@@ -162,109 +133,70 @@ def test_search_with_chamber_civ1(api):
     results = api.search(
         query="responsabilité contractuelle",
         chamber=["civ1"],  # Utilisation de la CLÉ correcte
-        page_size=5
+        page_size=5,
     )
 
     assert results is not None
-
 
 
 def test_search_with_chamber_soc(api):
     """Test une recherche dans la chambre sociale avec la clé correcte"""
 
     results = api.search(
-        query="licenciement",
-        chamber=["soc"],  # Utilisation de la CLÉ correcte
-        page_size=5
+        query="licenciement", chamber=["soc"], page_size=5  # Utilisation de la CLÉ correcte
     )
 
     assert results is not None
-
 
 
 def test_search_with_jurisdiction_filter(api):
     """Test une recherche filtrée par juridiction"""
 
-    results = api.search(
-        query="prescription",
-        jurisdiction=["cc"],
-        page_size=5
-    )
+    results = api.search(query="prescription", jurisdiction=["cc"], page_size=5)
 
     assert results is not None
-
 
 
 def test_search_with_publication_filter(api):
     """Test une recherche filtrée par niveau de publication"""
 
-    results = api.search(
-        query="cassation",
-        publication=["b"],  # Bulletin
-        page_size=3
-    )
+    results = api.search(query="cassation", publication=["b"], page_size=3)  # Bulletin
 
     assert results is not None
-
 
 
 def test_search_with_solution_filter(api):
     """Test une recherche filtrée par solution"""
 
-    results = api.search(
-        query="recours",
-        solution=["rejet"],
-        page_size=5
-    )
+    results = api.search(query="recours", solution=["rejet"], page_size=5)
 
     assert results is not None
-
 
 
 def test_search_with_sort_date(api):
     """Test une recherche triée par date"""
 
-    results = api.search(
-        query="propriété",
-        sort="date",
-        order="desc",
-        page_size=5
-    )
+    results = api.search(query="propriété", sort="date", order="desc", page_size=5)
 
     assert results is not None
-
 
 
 def test_search_with_sort_score(api):
     """Test une recherche triée par pertinence"""
 
-    results = api.search(
-        query="préjudice",
-        sort="score",
-        order="desc",
-        page_size=5
-    )
+    results = api.search(query="préjudice", sort="score", order="desc", page_size=5)
 
     assert results is not None
-
 
 
 def test_search_pagination(api):
     """Test la pagination des résultats"""
 
     # Première page
-    results_page1 = api.search(
-        query="contrat",
-        page=0,
-        page_size=3
-    )
+    results_page1 = api.search(query="contrat", page=0, page_size=3)
 
     # Deuxième page
-    results_page2 = api.search(
-        query="contrat",
-        page=1,
-        page_size=3
-    )
+    results_page2 = api.search(query="contrat", page=1, page_size=3)
 
     assert results_page1 is not None
     assert results_page2 is not None
@@ -280,27 +212,17 @@ def test_search_pagination(api):
 def test_search_with_resolve_references(api):
     """Test une recherche avec résolution des références"""
 
-    results = api.search(
-        query="divorce",
-        resolve_references=True,
-        page_size=3
-    )
+    results = api.search(query="divorce", resolve_references=True, page_size=3)
 
     assert results is not None
-
 
 
 def test_search_particular_interest(api):
     """Test une recherche filtrée par intérêt particulier"""
 
-    results = api.search(
-        query="jurisprudence",
-        particularInterest=True,
-        page_size=5
-    )
+    results = api.search(query="jurisprudence", particularInterest=True, page_size=5)
 
     assert results is not None
-  
 
 
 def test_search_with_multiple_filters(api):
@@ -314,11 +236,10 @@ def test_search_with_multiple_filters(api):
         date_end="2023-12-31",
         sort="date",
         order="desc",
-        page_size=5
+        page_size=5,
     )
 
     assert results is not None
-
 
 
 def test_search_empty_query(api):
@@ -359,7 +280,6 @@ def test_search_invalid_order(api):
         api.search(query="test", order="invalid")
 
 
-
 def test_decision_with_resolve_references(api):
     """Test la récupération d'une décision avec références résolues"""
 
@@ -382,11 +302,7 @@ def test_decision_with_query_highlight(api):
     if search_results and "results" in search_results and len(search_results["results"]) > 0:
         decision_id = search_results["results"][0].get("id")
         if decision_id:
-            decision = api.decision(
-                decision_id,
-                query="divorce",
-                operator="or"
-            )
+            decision = api.decision(decision_id, query="divorce", operator="or")
             assert decision is not None
 
 
@@ -402,7 +318,6 @@ def test_decision_invalid_operator(api):
 
     with pytest.raises(ValueError, match="operator doit être"):
         api.decision("test_id", query="test", operator="invalid")
-
 
 
 def test_taxonomy_jurisdiction(api):
@@ -500,8 +415,6 @@ def test_taxonomy_value_requires_id(api):
         api.taxonomy(value="cour de cassation")
 
 
-
-
 if __name__ == "__main__":
     # Permet d'exécuter directement le fichier pour des tests rapides
     print("Exécution des tests JudiLibre...")
@@ -524,7 +437,6 @@ if __name__ == "__main__":
     print("\nTest 4: Recherche avec filtres de date")
     test_search_with_date_range(api_instance)
     print("✓ Réussi")
-
 
     print("\n✓ Tous les tests de base sont réussis!")
     print("\nPour exécuter tous les tests avec pytest:")

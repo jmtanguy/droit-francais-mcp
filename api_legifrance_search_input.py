@@ -21,335 +21,335 @@ class LegiFranceSearchInput:
 
     # Constantes pour les types de recherche
     TYPE_RECHERCHE = {
-        'UN_DES_MOTS': 'UN_DES_MOTS',
-        'EXACTE': 'EXACTE',
-        'TOUS_LES_MOTS_DANS_UN_CHAMP': 'TOUS_LES_MOTS_DANS_UN_CHAMP',
-        'AUCUN_DES_MOTS': 'AUCUN_DES_MOTS',
-        'AUCUNE_CORRESPONDANCE_A_CETTE_EXPRESSION': 'AUCUNE_CORRESPONDANCE_A_CETTE_EXPRESSION'
+        "UN_DES_MOTS": "UN_DES_MOTS",
+        "EXACTE": "EXACTE",
+        "TOUS_LES_MOTS_DANS_UN_CHAMP": "TOUS_LES_MOTS_DANS_UN_CHAMP",
+        "AUCUN_DES_MOTS": "AUCUN_DES_MOTS",
+        "AUCUNE_CORRESPONDANCE_A_CETTE_EXPRESSION": "AUCUNE_CORRESPONDANCE_A_CETTE_EXPRESSION",
     }
 
     # Constantes pour les types de champs avec descriptions et usage
     TYPE_CHAMP = {
-        'ALL': 'ALL',                           # Recherche dans tous les champs
-        'TITLE': 'TITLE',                       # Titre du texte
-        'TABLE': 'TABLE',                       # Table des matières
-        'NOR': 'NOR',                           # Numéro d'ordre réglementaire
-        'NUM': 'NUM',                           # Numéro du texte
-        'ADVANCED_TEXTE_ID': 'ADVANCED_TEXTE_ID', # Identifiant technique du texte
-        'NUM_DELIB': 'NUM_DELIB',               # Numéro de délibération
-        'NUM_DEC': 'NUM_DEC',                   # Numéro de décision
-        'NUM_ARTICLE': 'NUM_ARTICLE',           # Numéro d'article
-        'ARTICLE': 'ARTICLE',                   # Contenu des articles
-        'MINISTERE': 'MINISTERE',               # Ministère émetteur
-        'VISA': 'VISA',                         # Visas du texte
-        'NOTICE': 'NOTICE',                     # Notice du texte
-        'VISA_NOTICE': 'VISA_NOTICE',           # Visas et notice combinés
-        'TRAVAUX_PREP': 'TRAVAUX_PREP',         # Travaux préparatoires
-        'SIGNATURE': 'SIGNATURE',               # Signataires
-        'NOTA': 'NOTA',                         # Nota du texte
-        'NUM_AFFAIRE': 'NUM_AFFAIRE',           # Numéro d'affaire (jurisprudence)
-        'ABSTRATS': 'ABSTRATS',                 # Résumés/abstracts
-        'RESUMES': 'RESUMES',                   # Résumés
-        'TEXTE': 'TEXTE',                       # Contenu textuel complet
-        'ECLI': 'ECLI',                         # Identifiant ECLI (jurisprudence européenne)
-        'NUM_LOI_DEF': 'NUM_LOI_DEF',           # Numéro de loi déférée
-        'TYPE_DECISION': 'TYPE_DECISION',       # Type de décision
-        'NUMERO_INTERNE': 'NUMERO_INTERNE',     # Numéro interne
-        'REF_PUBLI': 'REF_PUBLI',               # Référence de publication
-        'RESUME_CIRC': 'RESUME_CIRC',           # Résumé de circulaire
-        'TEXTE_REF': 'TEXTE_REF',               # Texte de référence
-        'TITRE_LOI_DEF': 'TITRE_LOI_DEF',       # Titre de loi déférée
-        'RAISON_SOCIALE': 'RAISON_SOCIALE',     # Raison sociale (accords d'entreprise)
-        'MOTS_CLES': 'MOTS_CLES',               # Mots-clés
-        'IDCC': 'IDCC'                          # Identifiant de convention collective
+        "ALL": "ALL",  # Recherche dans tous les champs
+        "TITLE": "TITLE",  # Titre du texte
+        "TABLE": "TABLE",  # Table des matières
+        "NOR": "NOR",  # Numéro d'ordre réglementaire
+        "NUM": "NUM",  # Numéro du texte
+        "ADVANCED_TEXTE_ID": "ADVANCED_TEXTE_ID",  # Identifiant technique du texte
+        "NUM_DELIB": "NUM_DELIB",  # Numéro de délibération
+        "NUM_DEC": "NUM_DEC",  # Numéro de décision
+        "NUM_ARTICLE": "NUM_ARTICLE",  # Numéro d'article
+        "ARTICLE": "ARTICLE",  # Contenu des articles
+        "MINISTERE": "MINISTERE",  # Ministère émetteur
+        "VISA": "VISA",  # Visas du texte
+        "NOTICE": "NOTICE",  # Notice du texte
+        "VISA_NOTICE": "VISA_NOTICE",  # Visas et notice combinés
+        "TRAVAUX_PREP": "TRAVAUX_PREP",  # Travaux préparatoires
+        "SIGNATURE": "SIGNATURE",  # Signataires
+        "NOTA": "NOTA",  # Nota du texte
+        "NUM_AFFAIRE": "NUM_AFFAIRE",  # Numéro d'affaire (jurisprudence)
+        "ABSTRATS": "ABSTRATS",  # Résumés/abstracts
+        "RESUMES": "RESUMES",  # Résumés
+        "TEXTE": "TEXTE",  # Contenu textuel complet
+        "ECLI": "ECLI",  # Identifiant ECLI (jurisprudence européenne)
+        "NUM_LOI_DEF": "NUM_LOI_DEF",  # Numéro de loi déférée
+        "TYPE_DECISION": "TYPE_DECISION",  # Type de décision
+        "NUMERO_INTERNE": "NUMERO_INTERNE",  # Numéro interne
+        "REF_PUBLI": "REF_PUBLI",  # Référence de publication
+        "RESUME_CIRC": "RESUME_CIRC",  # Résumé de circulaire
+        "TEXTE_REF": "TEXTE_REF",  # Texte de référence
+        "TITRE_LOI_DEF": "TITRE_LOI_DEF",  # Titre de loi déférée
+        "RAISON_SOCIALE": "RAISON_SOCIALE",  # Raison sociale (accords d'entreprise)
+        "MOTS_CLES": "MOTS_CLES",  # Mots-clés
+        "IDCC": "IDCC",  # Identifiant de convention collective
     }
 
     # Descriptions détaillées des types de champs
     TYPE_CHAMP_DESCRIPTIONS = {
-        'ALL': {
-            'nom': 'Tous les champs',
-            'description': 'Recherche dans l\'ensemble des champs disponibles du document',
-            'usage': 'Recherche générale quand on ne sait pas dans quel champ chercher',
-            'exemple': 'Rechercher "mariage" dans tout le document'
+        "ALL": {
+            "nom": "Tous les champs",
+            "description": "Recherche dans l'ensemble des champs disponibles du document",
+            "usage": "Recherche générale quand on ne sait pas dans quel champ chercher",
+            "exemple": 'Rechercher "mariage" dans tout le document',
         },
-        'TITLE': {
-            'nom': 'Titre',
-            'description': 'Titre officiel du texte juridique',
-            'usage': 'Rechercher des textes par leur intitulé exact ou partiel',
-            'exemple': 'Rechercher "Code civil" ou "loi sur le mariage"'
+        "TITLE": {
+            "nom": "Titre",
+            "description": "Titre officiel du texte juridique",
+            "usage": "Rechercher des textes par leur intitulé exact ou partiel",
+            "exemple": 'Rechercher "Code civil" ou "loi sur le mariage"',
         },
-        'TABLE': {
-            'nom': 'Table des matières',
-            'description': 'Structure et organisation du texte (parties, livres, titres, chapitres)',
-            'usage': 'Naviguer dans l\'organisation du texte, chercher des sections',
-            'exemple': 'Rechercher "Livre premier" ou "Titre II"'
+        "TABLE": {
+            "nom": "Table des matières",
+            "description": "Structure et organisation du texte (parties, livres, titres, chapitres)",
+            "usage": "Naviguer dans l'organisation du texte, chercher des sections",
+            "exemple": 'Rechercher "Livre premier" ou "Titre II"',
         },
-        'NOR': {
-            'nom': 'Numéro NOR',
-            'description': 'Numéro d\'ordre réglementaire unique attribué aux textes',
-            'usage': 'Recherche précise d\'un texte par son identifiant officiel',
-            'exemple': 'JUSC1732516D pour un décret spécifique'
+        "NOR": {
+            "nom": "Numéro NOR",
+            "description": "Numéro d'ordre réglementaire unique attribué aux textes",
+            "usage": "Recherche précise d'un texte par son identifiant officiel",
+            "exemple": "JUSC1732516D pour un décret spécifique",
         },
-        'NUM': {
-            'nom': 'Numéro du texte',
-            'description': 'Numéro officiel du texte (loi n°, décret n°, etc.)',
-            'usage': 'Rechercher un texte par son numéro de publication',
-            'exemple': 'Loi n°2018-287 ou Décret n°2019-123'
+        "NUM": {
+            "nom": "Numéro du texte",
+            "description": "Numéro officiel du texte (loi n°, décret n°, etc.)",
+            "usage": "Rechercher un texte par son numéro de publication",
+            "exemple": "Loi n°2018-287 ou Décret n°2019-123",
         },
-        'ADVANCED_TEXTE_ID': {
-            'nom': 'Identifiant technique',
-            'description': 'Identifiant technique interne du système Légifrance',
-            'usage': 'Recherche technique par ID système (usage avancé)',
-            'exemple': 'LEGITEXT000006070721'
+        "ADVANCED_TEXTE_ID": {
+            "nom": "Identifiant technique",
+            "description": "Identifiant technique interne du système Légifrance",
+            "usage": "Recherche technique par ID système (usage avancé)",
+            "exemple": "LEGITEXT000006070721",
         },
-        'NUM_DELIB': {
-            'nom': 'Numéro de délibération',
-            'description': 'Numéro de délibération pour les textes délibératifs',
-            'usage': 'Rechercher des délibérations spécifiques (CNIL, collectivités)',
-            'exemple': 'Délibération n°2019-001'
+        "NUM_DELIB": {
+            "nom": "Numéro de délibération",
+            "description": "Numéro de délibération pour les textes délibératifs",
+            "usage": "Rechercher des délibérations spécifiques (CNIL, collectivités)",
+            "exemple": "Délibération n°2019-001",
         },
-        'NUM_DEC': {
-            'nom': 'Numéro de décision',
-            'description': 'Numéro de décision pour la jurisprudence',
-            'usage': 'Rechercher des décisions de justice par leur numéro',
-            'exemple': 'Arrêt n°19-12345'
+        "NUM_DEC": {
+            "nom": "Numéro de décision",
+            "description": "Numéro de décision pour la jurisprudence",
+            "usage": "Rechercher des décisions de justice par leur numéro",
+            "exemple": "Arrêt n°19-12345",
         },
-        'NUM_ARTICLE': {
-            'nom': 'Numéro d\'article',
-            'description': 'Numéro ou référence d\'un article spécifique',
-            'usage': 'Rechercher des articles précis dans les codes ou lois',
-            'exemple': 'Article 1134 ou Article L123-1'
+        "NUM_ARTICLE": {
+            "nom": "Numéro d'article",
+            "description": "Numéro ou référence d'un article spécifique",
+            "usage": "Rechercher des articles précis dans les codes ou lois",
+            "exemple": "Article 1134 ou Article L123-1",
         },
-        'ARTICLE': {
-            'nom': 'Contenu des articles',
-            'description': 'Texte intégral du contenu des articles',
-            'usage': 'Rechercher dans le contenu même des articles',
-            'exemple': 'Rechercher "responsabilité" dans les articles'
+        "ARTICLE": {
+            "nom": "Contenu des articles",
+            "description": "Texte intégral du contenu des articles",
+            "usage": "Rechercher dans le contenu même des articles",
+            "exemple": 'Rechercher "responsabilité" dans les articles',
         },
-        'MINISTERE': {
-            'nom': 'Ministère',
-            'description': 'Ministère ou autorité émettrice du texte',
-            'usage': 'Filtrer les textes par ministère d\'origine',
-            'exemple': 'Ministère de la Justice, Ministère de l\'Intérieur'
+        "MINISTERE": {
+            "nom": "Ministère",
+            "description": "Ministère ou autorité émettrice du texte",
+            "usage": "Filtrer les textes par ministère d'origine",
+            "exemple": "Ministère de la Justice, Ministère de l'Intérieur",
         },
-        'VISA': {
-            'nom': 'Visas',
-            'description': 'Références aux textes sur lesquels s\'appuie la décision',
-            'usage': 'Rechercher les fondements juridiques cités',
-            'exemple': 'Vu le Code civil, vu la loi du...'
+        "VISA": {
+            "nom": "Visas",
+            "description": "Références aux textes sur lesquels s'appuie la décision",
+            "usage": "Rechercher les fondements juridiques cités",
+            "exemple": "Vu le Code civil, vu la loi du...",
         },
-        'NOTICE': {
-            'nom': 'Notice',
-            'description': 'Notice explicative ou informative du texte',
-            'usage': 'Rechercher des explications ou contexte du texte',
-            'exemple': 'Informations sur l\'application du texte'
+        "NOTICE": {
+            "nom": "Notice",
+            "description": "Notice explicative ou informative du texte",
+            "usage": "Rechercher des explications ou contexte du texte",
+            "exemple": "Informations sur l'application du texte",
         },
-        'VISA_NOTICE': {
-            'nom': 'Visas et notice',
-            'description': 'Recherche combinée dans les visas et la notice',
-            'usage': 'Rechercher à la fois dans les références et explications',
-            'exemple': 'Contexte juridique complet du texte'
+        "VISA_NOTICE": {
+            "nom": "Visas et notice",
+            "description": "Recherche combinée dans les visas et la notice",
+            "usage": "Rechercher à la fois dans les références et explications",
+            "exemple": "Contexte juridique complet du texte",
         },
-        'TRAVAUX_PREP': {
-            'nom': 'Travaux préparatoires',
-            'description': 'Documents préparatoires (rapports, débats parlementaires)',
-            'usage': 'Comprendre l\'intention du législateur',
-            'exemple': 'Rapport de la commission, exposé des motifs'
+        "TRAVAUX_PREP": {
+            "nom": "Travaux préparatoires",
+            "description": "Documents préparatoires (rapports, débats parlementaires)",
+            "usage": "Comprendre l'intention du législateur",
+            "exemple": "Rapport de la commission, exposé des motifs",
         },
-        'SIGNATURE': {
-            'nom': 'Signataires',
-            'description': 'Autorités ayant signé ou approuvé le texte',
-            'usage': 'Rechercher par autorité signataire',
-            'exemple': 'Ministre, Président de la République'
+        "SIGNATURE": {
+            "nom": "Signataires",
+            "description": "Autorités ayant signé ou approuvé le texte",
+            "usage": "Rechercher par autorité signataire",
+            "exemple": "Ministre, Président de la République",
         },
-        'NOTA': {
-            'nom': 'Nota',
-            'description': 'Notes explicatives ou d\'application du texte',
-            'usage': 'Trouver des précisions sur l\'application',
-            'exemple': 'Conditions d\'entrée en vigueur, exceptions'
+        "NOTA": {
+            "nom": "Nota",
+            "description": "Notes explicatives ou d'application du texte",
+            "usage": "Trouver des précisions sur l'application",
+            "exemple": "Conditions d'entrée en vigueur, exceptions",
         },
-        'NUM_AFFAIRE': {
-            'nom': 'Numéro d\'affaire',
-            'description': 'Numéro d\'affaire judiciaire ou administrative',
-            'usage': 'Rechercher une affaire judiciaire précise',
-            'exemple': '19-12.345 pour une affaire en cours d\'appel'
+        "NUM_AFFAIRE": {
+            "nom": "Numéro d'affaire",
+            "description": "Numéro d'affaire judiciaire ou administrative",
+            "usage": "Rechercher une affaire judiciaire précise",
+            "exemple": "19-12.345 pour une affaire en cours d'appel",
         },
-        'ABSTRATS': {
-            'nom': 'Abstracts',
-            'description': 'Résumés courts du contenu principal',
-            'usage': 'Recherche dans les résumés pour avoir un aperçu',
-            'exemple': 'Mots-clés du résumé exécutif'
+        "ABSTRATS": {
+            "nom": "Abstracts",
+            "description": "Résumés courts du contenu principal",
+            "usage": "Recherche dans les résumés pour avoir un aperçu",
+            "exemple": "Mots-clés du résumé exécutif",
         },
-        'RESUMES': {
-            'nom': 'Résumés',
-            'description': 'Résumés détaillés du texte',
-            'usage': 'Rechercher dans les synthèses du contenu',
-            'exemple': 'Points principaux du texte'
+        "RESUMES": {
+            "nom": "Résumés",
+            "description": "Résumés détaillés du texte",
+            "usage": "Rechercher dans les synthèses du contenu",
+            "exemple": "Points principaux du texte",
         },
-        'TEXTE': {
-            'nom': 'Texte intégral',
-            'description': 'Contenu textuel complet du document',
-            'usage': 'Recherche exhaustive dans tout le contenu',
-            'exemple': 'Rechercher n\'importe quel terme dans le texte'
+        "TEXTE": {
+            "nom": "Texte intégral",
+            "description": "Contenu textuel complet du document",
+            "usage": "Recherche exhaustive dans tout le contenu",
+            "exemple": "Rechercher n'importe quel terme dans le texte",
         },
-        'ECLI': {
-            'nom': 'Identifiant ECLI',
-            'description': 'European Case Law Identifier - Identifiant européen de jurisprudence',
-            'usage': 'Recherche de jurisprudence avec référence européenne',
-            'exemple': 'ECLI:FR:CCASS:2019:C100123'
+        "ECLI": {
+            "nom": "Identifiant ECLI",
+            "description": "European Case Law Identifier - Identifiant européen de jurisprudence",
+            "usage": "Recherche de jurisprudence avec référence européenne",
+            "exemple": "ECLI:FR:CCASS:2019:C100123",
         },
-        'NUM_LOI_DEF': {
-            'nom': 'Numéro de loi déférée',
-            'description': 'Numéro de la loi contestée devant le Conseil constitutionnel',
-            'usage': 'Rechercher les décisions constitutionnelles par loi contestée',
-            'exemple': 'Loi n°2018-123 déférée au Conseil constitutionnel'
+        "NUM_LOI_DEF": {
+            "nom": "Numéro de loi déférée",
+            "description": "Numéro de la loi contestée devant le Conseil constitutionnel",
+            "usage": "Rechercher les décisions constitutionnelles par loi contestée",
+            "exemple": "Loi n°2018-123 déférée au Conseil constitutionnel",
         },
-        'TYPE_DECISION': {
-            'nom': 'Type de décision',
-            'description': 'Catégorie de la décision de justice',
-            'usage': 'Filtrer par type de décision judiciaire',
-            'exemple': 'Arrêt, ordonnance, jugement'
+        "TYPE_DECISION": {
+            "nom": "Type de décision",
+            "description": "Catégorie de la décision de justice",
+            "usage": "Filtrer par type de décision judiciaire",
+            "exemple": "Arrêt, ordonnance, jugement",
         },
-        'NUMERO_INTERNE': {
-            'nom': 'Numéro interne',
-            'description': 'Numéro de référence interne à l\'administration',
-            'usage': 'Recherche par référence administrative interne',
-            'exemple': 'Numéro de dossier administratif'
+        "NUMERO_INTERNE": {
+            "nom": "Numéro interne",
+            "description": "Numéro de référence interne à l'administration",
+            "usage": "Recherche par référence administrative interne",
+            "exemple": "Numéro de dossier administratif",
         },
-        'REF_PUBLI': {
-            'nom': 'Référence de publication',
-            'description': 'Référence de publication dans les bulletins officiels',
-            'usage': 'Rechercher par référence de publication officielle',
-            'exemple': 'JORF n°123 du 15/06/2019'
+        "REF_PUBLI": {
+            "nom": "Référence de publication",
+            "description": "Référence de publication dans les bulletins officiels",
+            "usage": "Rechercher par référence de publication officielle",
+            "exemple": "JORF n°123 du 15/06/2019",
         },
-        'RESUME_CIRC': {
-            'nom': 'Résumé de circulaire',
-            'description': 'Résumé spécifique aux circulaires ministérielles',
-            'usage': 'Rechercher dans les résumés de circulaires',
-            'exemple': 'Objectifs et portée de la circulaire'
+        "RESUME_CIRC": {
+            "nom": "Résumé de circulaire",
+            "description": "Résumé spécifique aux circulaires ministérielles",
+            "usage": "Rechercher dans les résumés de circulaires",
+            "exemple": "Objectifs et portée de la circulaire",
         },
-        'TEXTE_REF': {
-            'nom': 'Texte de référence',
-            'description': 'Références aux textes cités ou modifiés',
-            'usage': 'Trouver les textes qui citent ou modifient d\'autres textes',
-            'exemple': 'Références aux codes modifiés'
+        "TEXTE_REF": {
+            "nom": "Texte de référence",
+            "description": "Références aux textes cités ou modifiés",
+            "usage": "Trouver les textes qui citent ou modifient d'autres textes",
+            "exemple": "Références aux codes modifiés",
         },
-        'TITRE_LOI_DEF': {
-            'nom': 'Titre de loi déférée',
-            'description': 'Titre de la loi contestée devant le Conseil constitutionnel',
-            'usage': 'Rechercher les décisions constitutionnelles par titre de loi',
-            'exemple': 'Loi de finances pour 2019'
+        "TITRE_LOI_DEF": {
+            "nom": "Titre de loi déférée",
+            "description": "Titre de la loi contestée devant le Conseil constitutionnel",
+            "usage": "Rechercher les décisions constitutionnelles par titre de loi",
+            "exemple": "Loi de finances pour 2019",
         },
-        'RAISON_SOCIALE': {
-            'nom': 'Raison sociale',
-            'description': 'Nom de l\'entreprise pour les accords d\'entreprise',
-            'usage': 'Rechercher les accords par nom d\'entreprise',
-            'exemple': 'SNCF, Renault, Total'
+        "RAISON_SOCIALE": {
+            "nom": "Raison sociale",
+            "description": "Nom de l'entreprise pour les accords d'entreprise",
+            "usage": "Rechercher les accords par nom d'entreprise",
+            "exemple": "SNCF, Renault, Total",
         },
-        'MOTS_CLES': {
-            'nom': 'Mots-clés',
-            'description': 'Mots-clés thématiques associés au texte',
-            'usage': 'Rechercher par thématique ou domaine juridique',
-            'exemple': 'Droit du travail, fiscalité, urbanisme'
+        "MOTS_CLES": {
+            "nom": "Mots-clés",
+            "description": "Mots-clés thématiques associés au texte",
+            "usage": "Rechercher par thématique ou domaine juridique",
+            "exemple": "Droit du travail, fiscalité, urbanisme",
         },
-        'IDCC': {
-            'nom': 'IDCC',
-            'description': 'Identifiant de Convention Collective',
-            'usage': 'Rechercher une convention collective par son numéro IDCC',
-            'exemple': 'IDCC 1596 pour la métallurgie'
-        }
+        "IDCC": {
+            "nom": "IDCC",
+            "description": "Identifiant de Convention Collective",
+            "usage": "Rechercher une convention collective par son numéro IDCC",
+            "exemple": "IDCC 1596 pour la métallurgie",
+        },
     }
 
     # Constantes pour les fonds avec descriptions
     FONDS = {
-        'JORF': 'JORF',           # Journal Officiel de la République Française - Textes publiés au JO
-        'CNIL': 'CNIL',           # Commission Nationale de l'Informatique et des Libertés - Décisions et délibérations
-        'CETAT': 'CETAT',         # Conseil d'État - Jurisprudence administrative
-        'JURI': 'JURI',           # Jurisprudence judiciaire - Décisions de justice
-        'JUFI': 'JUFI',           # Jurisprudence financière - Décisions des juridictions financières
-        'CONSTIT': 'CONSTIT',     # Conseil Constitutionnel - Décisions constitutionnelles
-        'KALI': 'KALI',           # Conventions collectives - Accords collectifs de travail
-        'CODE_DATE': 'CODE_DATE', # Codes consolidés - Recherche par date de version
-        'CODE_ETAT': 'CODE_ETAT', # Codes consolidés - Recherche par état juridique
-        'LODA_DATE': 'LODA_DATE', # Lois, Ordonnances, Décrets, Arrêtés - Recherche par date de version
-        'LODA_ETAT': 'LODA_ETAT', # Lois, Ordonnances, Décrets, Arrêtés - Recherche par état juridique
-        'ALL': 'ALL',             # Tous les fonds - Recherche transversale
-        'CIRC': 'CIRC',           # Circulaires et instructions - Textes d'application
-        'ACCO': 'ACCO'            # Accords d'entreprise - Accords collectifs d'entreprise
+        "JORF": "JORF",  # Journal Officiel de la République Française - Textes publiés au JO
+        "CNIL": "CNIL",  # Commission Nationale de l'Informatique et des Libertés - Décisions et délibérations
+        "CETAT": "CETAT",  # Conseil d'État - Jurisprudence administrative
+        "JURI": "JURI",  # Jurisprudence judiciaire - Décisions de justice
+        "JUFI": "JUFI",  # Jurisprudence financière - Décisions des juridictions financières
+        "CONSTIT": "CONSTIT",  # Conseil Constitutionnel - Décisions constitutionnelles
+        "KALI": "KALI",  # Conventions collectives - Accords collectifs de travail
+        "CODE_DATE": "CODE_DATE",  # Codes consolidés - Recherche par date de version
+        "CODE_ETAT": "CODE_ETAT",  # Codes consolidés - Recherche par état juridique
+        "LODA_DATE": "LODA_DATE",  # Lois, Ordonnances, Décrets, Arrêtés - Recherche par date de version
+        "LODA_ETAT": "LODA_ETAT",  # Lois, Ordonnances, Décrets, Arrêtés - Recherche par état juridique
+        "ALL": "ALL",  # Tous les fonds - Recherche transversale
+        "CIRC": "CIRC",  # Circulaires et instructions - Textes d'application
+        "ACCO": "ACCO",  # Accords d'entreprise - Accords collectifs d'entreprise
     }
 
     # Descriptions détaillées des fonds
     FONDS_DESCRIPTIONS = {
-        'JORF': {
-            'nom': 'Journal Officiel de la République Française',
-            'description': 'Textes publiés au Journal Officiel : lois, décrets, arrêtés, avis, annonces...',
-            'contenu': 'Publications officielles, textes réglementaires, nominations, marchés publics'
+        "JORF": {
+            "nom": "Journal Officiel de la République Française",
+            "description": "Textes publiés au Journal Officiel : lois, décrets, arrêtés, avis, annonces...",
+            "contenu": "Publications officielles, textes réglementaires, nominations, marchés publics",
         },
-        'CNIL': {
-            'nom': 'Commission Nationale de l\'Informatique et des Libertés',
-            'description': 'Décisions, délibérations et avis de la CNIL en matière de protection des données',
-            'contenu': 'Autorisations, sanctions, recommandations, délibérations'
+        "CNIL": {
+            "nom": "Commission Nationale de l'Informatique et des Libertés",
+            "description": "Décisions, délibérations et avis de la CNIL en matière de protection des données",
+            "contenu": "Autorisations, sanctions, recommandations, délibérations",
         },
-        'CETAT': {
-            'nom': 'Conseil d\'État',
-            'description': 'Jurisprudence administrative du Conseil d\'État et des juridictions administratives',
-            'contenu': 'Arrêts, ordonnances, avis du Conseil d\'État et des cours administratives d\'appel'
+        "CETAT": {
+            "nom": "Conseil d'État",
+            "description": "Jurisprudence administrative du Conseil d'État et des juridictions administratives",
+            "contenu": "Arrêts, ordonnances, avis du Conseil d'État et des cours administratives d'appel",
         },
-        'JURI': {
-            'nom': 'Jurisprudence judiciaire',
-            'description': 'Décisions des juridictions de l\'ordre judiciaire',
-            'contenu': 'Arrêts de la Cour de cassation, cours d\'appel, tribunaux'
+        "JURI": {
+            "nom": "Jurisprudence judiciaire",
+            "description": "Décisions des juridictions de l'ordre judiciaire",
+            "contenu": "Arrêts de la Cour de cassation, cours d'appel, tribunaux",
         },
-        'JUFI': {
-            'nom': 'Jurisprudence financière',
-            'description': 'Décisions des juridictions financières (Cour des comptes, CRC)',
-            'contenu': 'Arrêts de la Cour des comptes et des chambres régionales des comptes'
+        "JUFI": {
+            "nom": "Jurisprudence financière",
+            "description": "Décisions des juridictions financières (Cour des comptes, CRC)",
+            "contenu": "Arrêts de la Cour des comptes et des chambres régionales des comptes",
         },
-        'CONSTIT': {
-            'nom': 'Conseil Constitutionnel',
-            'description': 'Décisions du Conseil constitutionnel',
-            'contenu': 'Décisions sur la constitutionnalité des lois, QPC, contrôle des élections'
+        "CONSTIT": {
+            "nom": "Conseil Constitutionnel",
+            "description": "Décisions du Conseil constitutionnel",
+            "contenu": "Décisions sur la constitutionnalité des lois, QPC, contrôle des élections",
         },
-        'KALI': {
-            'nom': 'Conventions collectives',
-            'description': 'Conventions et accords collectifs de travail étendus',
-            'contenu': 'Conventions collectives nationales, accords de branche, avenants'
+        "KALI": {
+            "nom": "Conventions collectives",
+            "description": "Conventions et accords collectifs de travail étendus",
+            "contenu": "Conventions collectives nationales, accords de branche, avenants",
         },
-        'CODE_DATE': {
-            'nom': 'Codes consolidés (par date)',
-            'description': 'Codes en vigueur recherchés par date de version',
-            'contenu': 'Tous les codes français consolidés avec historique des versions'
+        "CODE_DATE": {
+            "nom": "Codes consolidés (par date)",
+            "description": "Codes en vigueur recherchés par date de version",
+            "contenu": "Tous les codes français consolidés avec historique des versions",
         },
-        'CODE_ETAT': {
-            'nom': 'Codes consolidés (par état juridique)',
-            'description': 'Codes en vigueur recherchés par état juridique',
-            'contenu': 'Codes français avec statut juridique (en vigueur, abrogé, etc.)'
+        "CODE_ETAT": {
+            "nom": "Codes consolidés (par état juridique)",
+            "description": "Codes en vigueur recherchés par état juridique",
+            "contenu": "Codes français avec statut juridique (en vigueur, abrogé, etc.)",
         },
-        'LODA_DATE': {
-            'nom': 'LODA (par date)',
-            'description': 'Lois, Ordonnances, Décrets, Arrêtés recherchés par date de version',
-            'contenu': 'Textes législatifs et réglementaires consolidés avec historique'
+        "LODA_DATE": {
+            "nom": "LODA (par date)",
+            "description": "Lois, Ordonnances, Décrets, Arrêtés recherchés par date de version",
+            "contenu": "Textes législatifs et réglementaires consolidés avec historique",
         },
-        'LODA_ETAT': {
-            'nom': 'LODA (par état juridique)',
-            'description': 'Lois, Ordonnances, Décrets, Arrêtés recherchés par état juridique',
-            'contenu': 'Textes législatifs et réglementaires avec statut juridique'
+        "LODA_ETAT": {
+            "nom": "LODA (par état juridique)",
+            "description": "Lois, Ordonnances, Décrets, Arrêtés recherchés par état juridique",
+            "contenu": "Textes législatifs et réglementaires avec statut juridique",
         },
-        'ALL': {
-            'nom': 'Tous les fonds',
-            'description': 'Recherche transversale dans tous les fonds disponibles',
-            'contenu': 'Ensemble de la base juridique Légifrance'
+        "ALL": {
+            "nom": "Tous les fonds",
+            "description": "Recherche transversale dans tous les fonds disponibles",
+            "contenu": "Ensemble de la base juridique Légifrance",
         },
-        'CIRC': {
-            'nom': 'Circulaires et instructions',
-            'description': 'Circulaires et instructions ministérielles',
-            'contenu': 'Textes d\'application, instructions, notes de service'
+        "CIRC": {
+            "nom": "Circulaires et instructions",
+            "description": "Circulaires et instructions ministérielles",
+            "contenu": "Textes d'application, instructions, notes de service",
         },
-        'ACCO': {
-            'nom': 'Accords d\'entreprise',
-            'description': 'Accords collectifs d\'entreprise déposés',
-            'contenu': 'Accords d\'entreprise, protocoles d\'accord, avenants d\'entreprise'
-        }
+        "ACCO": {
+            "nom": "Accords d'entreprise",
+            "description": "Accords collectifs d'entreprise déposés",
+            "contenu": "Accords d'entreprise, protocoles d'accord, avenants d'entreprise",
+        },
     }
 
     def __init__(self):
@@ -364,11 +364,10 @@ class LegiFranceSearchInput:
                 "sort": "PERTINENCE",
                 "secondSort": "DATE_DESC",
                 "typePagination": "DEFAUT",
-            }
+            },
         }
 
-
-    def set_fond(self, fond: str) -> 'LegiFranceSearchInput':
+    def set_fond(self, fond: str) -> "LegiFranceSearchInput":
         """
         Définit le fonds de recherche.
 
@@ -406,14 +405,15 @@ class LegiFranceSearchInput:
             >>> search.set_fond("LODA_DATE")
         """
         if fond not in self.FONDS.values():
-            raise ValueError(f"Fonds invalide. Utilisez une des valeurs: {list(self.FONDS.values())}")
+            raise ValueError(
+                f"Fonds invalide. Utilisez une des valeurs: {list(self.FONDS.values())}"
+            )
         self.query["fond"] = fond
         return self
 
-    def add_champ(self,
-                  type_champ: str,
-                  criteres: List[Dict],
-                  operateur: str = "ET") -> 'LegiFranceSearchInput':
+    def add_champ(
+        self, type_champ: str, criteres: List[Dict], operateur: str = "ET"
+    ) -> "LegiFranceSearchInput":
         """
         Ajoute un champ de recherche (objet ChampDTO dans l'API Légifrance).
 
@@ -481,22 +481,22 @@ class LegiFranceSearchInput:
             >>> search.add_champ("TITLE", [critere1, critere2], "OU")
         """
         if type_champ not in self.TYPE_CHAMP.values():
-            raise ValueError(f"Type de champ invalide. Utilisez une des valeurs: {list(self.TYPE_CHAMP.values())}")
+            raise ValueError(
+                f"Type de champ invalide. Utilisez une des valeurs: {list(self.TYPE_CHAMP.values())}"
+            )
 
-        champ = {
-            "typeChamp": type_champ,
-            "criteres": criteres,
-            "operateur": operateur
-        }
+        champ = {"typeChamp": type_champ, "criteres": criteres, "operateur": operateur}
         self.query["recherche"]["champs"].append(champ)
         return self
 
-    def create_critere(self,
-                      valeur: str,
-                      type_recherche: str = "UN_DES_MOTS",
-                      operateur: str = "ET",
-                      proximite: Optional[int] = None,
-                      criteres: Optional[List[Dict]] = None) -> Dict:
+    def create_critere(
+        self,
+        valeur: str,
+        type_recherche: str = "UN_DES_MOTS",
+        operateur: str = "ET",
+        proximite: Optional[int] = None,
+        criteres: Optional[List[Dict]] = None,
+    ) -> Dict:
         """
         Crée un critère de recherche (objet CritereDTO dans l'API Légifrance).
 
@@ -571,12 +571,14 @@ class LegiFranceSearchInput:
             ... )
         """
         if type_recherche not in self.TYPE_RECHERCHE.values():
-            raise ValueError(f"Type de recherche invalide. Utilisez une des valeurs: {list(self.TYPE_RECHERCHE.values())}")
+            raise ValueError(
+                f"Type de recherche invalide. Utilisez une des valeurs: {list(self.TYPE_RECHERCHE.values())}"
+            )
 
         critere: Dict[str, Any] = {
             "valeur": valeur,
             "typeRecherche": type_recherche,
-            "operateur": operateur
+            "operateur": operateur,
         }
 
         if proximite is not None:
@@ -587,9 +589,7 @@ class LegiFranceSearchInput:
 
         return critere
 
-    def add_filtre_valeurs(self,
-                          facette: str,
-                          valeurs: List[str]) -> 'LegiFranceSearchInput':
+    def add_filtre_valeurs(self, facette: str, valeurs: List[str]) -> "LegiFranceSearchInput":
         """
         Ajoute un filtre par valeurs (objet FiltreDTO dans l'API Légifrance).
 
@@ -715,17 +715,13 @@ class LegiFranceSearchInput:
             >>> # Filtrer par ministère (JORF)
             >>> search.add_filtre_valeurs("MINISTERE", ["Ministère de la Justice"])
         """
-        filtre = {
-            "facette": facette,
-            "valeurs": valeurs
-        }
+        filtre = {"facette": facette, "valeurs": valeurs}
         self.query["recherche"]["filtres"].append(filtre)
         return self
 
-    def add_filtre_dates(self,
-                        facette: str,
-                        start_date: str,
-                        end_date: str) -> 'LegiFranceSearchInput':
+    def add_filtre_dates(
+        self, facette: str, start_date: str, end_date: str
+    ) -> "LegiFranceSearchInput":
         """
         Ajoute un filtre par période de dates (objet FiltreDTO avec DatePeriod dans l'API Légifrance).
 
@@ -796,19 +792,11 @@ class LegiFranceSearchInput:
             >>> # Filtrer les textes publiés en 2020
             >>> search.add_filtre_dates("DATE_PUBLICATION", "2020-01-01", "2020-12-31")
         """
-        filtre = {
-            "facette": facette,
-            "dates": {
-                "start": start_date,
-                "end": end_date
-            }
-        }
+        filtre = {"facette": facette, "dates": {"start": start_date, "end": end_date}}
         self.query["recherche"]["filtres"].append(filtre)
         return self
 
-    def add_filtre_date_unique(self,
-                              facette: str,
-                              date: str) -> 'LegiFranceSearchInput':
+    def add_filtre_date_unique(self, facette: str, date: str) -> "LegiFranceSearchInput":
         """
         Ajoute un filtre par date unique (objet FiltreDTO dans l'API Légifrance).
 
@@ -874,17 +862,13 @@ class LegiFranceSearchInput:
             >>> # Filtrer les textes signés le 1er janvier 2016
             >>> search.add_filtre_date_unique("DATE_SIGNATURE", "2016-01-01")
         """
-        filtre = {
-            "facette": facette,
-            "singleDate": date
-        }
+        filtre = {"facette": facette, "singleDate": date}
         self.query["recherche"]["filtres"].append(filtre)
         return self
 
-    def set_pagination(self,
-                      page_number: int = 1,
-                      page_size: int = 10,
-                      type_pagination: str = "DEFAUT") -> 'LegiFranceSearchInput':
+    def set_pagination(
+        self, page_number: int = 1, page_size: int = 10, type_pagination: str = "DEFAUT"
+    ) -> "LegiFranceSearchInput":
         """
         Configure la pagination des résultats (selon RechercheSpecifiqueDTO de l'API Légifrance).
 
@@ -923,7 +907,7 @@ class LegiFranceSearchInput:
         self.query["recherche"]["typePagination"] = type_pagination
         return self
 
-    def set_operateur_global(self, operateur: str) -> 'LegiFranceSearchInput':
+    def set_operateur_global(self, operateur: str) -> "LegiFranceSearchInput":
         """
         Définit l'opérateur global entre les champs de recherche (selon RechercheSpecifiqueDTO de l'API).
 
@@ -959,9 +943,7 @@ class LegiFranceSearchInput:
         self.query["recherche"]["operateur"] = operateur
         return self
 
-    def set_sort(self,
-                sort: str,
-                second_sort: Optional[str] = None) -> 'LegiFranceSearchInput':
+    def set_sort(self, sort: str, second_sort: Optional[str] = None) -> "LegiFranceSearchInput":
         """
         Configure le tri des résultats (selon RechercheSpecifiqueDTO de l'API Légifrance).
 
@@ -1011,7 +993,7 @@ class LegiFranceSearchInput:
             self.query["recherche"]["secondSort"] = second_sort
         return self
 
-    def set_advanced_search(self, advanced: bool = True) -> 'LegiFranceSearchInput':
+    def set_advanced_search(self, advanced: bool = True) -> "LegiFranceSearchInput":
         """
         Active ou désactive le mode de recherche avancée (selon RechercheSpecifiqueDTO de l'API).
 
@@ -1115,7 +1097,7 @@ class LegiFranceSearchInput:
         """
         return json.dumps(self.build(), indent=indent, ensure_ascii=False)
 
-    def reset(self) -> 'LegiFranceSearchInput':
+    def reset(self) -> "LegiFranceSearchInput":
         """
         Remet à zéro le générateur de requêtes.
 

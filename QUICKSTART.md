@@ -36,6 +36,7 @@ nano .env
 ```
 
 Remplir :
+
 ```bash
 PISTE_CLIENT_ID=votre_client_id
 PISTE_CLIENT_SECRET=votre_secret
@@ -45,13 +46,15 @@ PISTE_CLIENT_SECRET=votre_secret
 
 Lancer install.ps1 (Windows) ou install.sh (Mac)
 
-Demarrer Claude Client
+Démarrer Claude Desktop ou Cursor
 
 ✅ **C'est tout ! Le serveur est prêt.**
 
 ---
 
-## 🎯 Configuration Claude Desktop
+## 🎯 Configuration des clients MCP
+
+### Claude Desktop
 
 Ajouter dans `~/.config/claude-desktop/claude_desktop_config.json` :
 
@@ -68,13 +71,47 @@ Ajouter dans `~/.config/claude-desktop/claude_desktop_config.json` :
 
 Redémarrer Claude Desktop → Le serveur apparaît !
 
+### Cursor
+
+Ajouter dans votre fichier de configuration MCP Cursor (généralement `~/.cursor/mcp.json` ou dans les paramètres) :
+
+```json
+{
+  "mcpServers": {
+    "DroitFrancaisMCP": {
+      "command": "<PATH_TO_DroitFrancaisMCP>/.venv/bin/python3",
+      "args": [
+        "-u",
+        "<PATH_TO_DroitFrancaisMCP>/droit_francais_MCP.py"
+      ],
+      "cwd": "<PATH_TO_DroitFrancaisMCP>",
+      "env": {
+        "PYTHONPATH": "<PATH_TO_DroitFrancaisMCP>",
+        "PYTHONUNBUFFERED": "1",
+        "PYTHONIOENCODING": "utf-8"
+      },
+      "envFile": "<PATH_TO_ENV_FILE>",
+      "description": "MCP server for French legal research (Légifrance, JudiLibre)",
+      "enabled": true
+    }
+  }
+}
+```
+
+> 💡 **Remplacez** :
+>
+> - `<PATH_TO_DroitFrancaisMCP>` par le chemin complet vers votre répertoire
+> - `<PATH_TO_ENV_FILE>` par le chemin complet vers votre fichier `.env`
+
+Redémarrer Cursor → Le serveur apparaît !
+
 ---
 
 ## 🧪 Premier test
 
-Dans Claude Desktop, essayez :
+Dans Claude Desktop ou Cursor, essayez :
 
-```
+```text
 Recherche-moi les articles sur le mariage dans le Code civil
 ```
 
@@ -122,7 +159,7 @@ safety check
 
 ### Structure du projet
 
-```
+```text
 DroitFrancaisMCP/
 ├── droit_francais_MCP.py      # Serveur MCP principal
 ├── api_legifrance.py           # Client Légifrance
@@ -144,6 +181,7 @@ DroitFrancaisMCP/
 ## 🐛 Dépannage
 
 ### Erreur d'import
+
 ```bash
 # Vérifier l'environnement virtuel
 which python3  # Doit pointer vers .venv/
@@ -153,6 +191,7 @@ pip install -r requirements.txt
 ```
 
 ### Erreur d'authentification
+
 ```bash
 # Vérifier .env
 cat .env | grep PISTE
@@ -161,6 +200,7 @@ cat .env | grep PISTE
 ```
 
 ### Tests qui échouent
+
 ```bash
 # Vérifier les logs
 cat droit_francais_mcp.log
@@ -184,7 +224,6 @@ cat droit_francais_mcp.log
 
 ---
 
+Bonne utilisation ! 🎉
 
-**Bonne utilisation ! 🎉**
-
-*Version 1.0.0 - Jean-Michel Tanguy*
+Version 1.1.0 - Jean-Michel Tanguy

@@ -1,10 +1,9 @@
 # 🏛️ Serveur MCP Droit Français
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/votre-utilisateur/DroitFrancaisMCP/releases)
+[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/jmtanguy/DroitFrancaisMCP/releases)
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![MCP](https://img.shields.io/badge/MCP-Compatible-purple)](https://modelcontextprotocol.io/)
-
 
 Ce projet a pour objectif d’explorer l’intégration d’outils dans **Claude Desktop** via le protocole **Model Context Protocol (MCP)**.
 
@@ -13,10 +12,12 @@ Il s’inscrit dans une démarche d’expérimentation et de validation visant �
 Dans ce cadre, l’accent est mis sur l’accès à des données juridiques fiables issues de sources officielles.
 
 Le serveur MCP développé ici fournit une interface unifiée pour interroger les API publiques du droit français, notamment :
+
 - Légifrance – pour la législation, les codes, les lois et les décrets
 - JudiLibre – pour la jurisprudence et les décisions judiciaires
 
 Grâce à ce serveur, il devient possible de rechercher et de consulter :
+
 - 📖 Les codes juridiques français (Code civil, Code pénal, Code du travail, etc.)
 - 📜 Les lois, ordonnances, décrets et arrêtés
 - ⚖️ La jurisprudence de toutes les juridictions françaises
@@ -31,12 +32,11 @@ Grâce à ce serveur, il devient possible de rechercher et de consulter :
 - [Prérequis](#-prérequis)
 - [Fonctionnalités](#-fonctionnalités)
 - [Installation](#-installation)
-- [Configuration](#-configuration)
-- [Utilisation](#-utilisation)
-- [Outils disponibles](#-outils-disponibles)
-- [Architecture](#-architecture)
+- [Configuration](#configuration)
+- [Utilisation](#utilisation)
+- [Outils disponibles](#outils-disponibles)
+- [Architecture](#architecture)
 - [Tests](#-tests)
-- [Contribution](#-contribution)
 - [Licence](#-licence)
 
 ---
@@ -49,7 +49,7 @@ Grâce à ce serveur, il devient possible de rechercher et de consulter :
 
 Afin de valider l'accès aux API, vous devez également valider les conditions d'utilisations pour les API Légifrance et Judilibre.
 
-#### Comment obtenir vos accès :
+#### Comment obtenir vos accès
 
 1. **Créer un compte** sur [piste.gouv.fr](https://piste.gouv.fr/)
 2. **Demander l'accès** aux API suivantes :
@@ -66,7 +66,7 @@ Afin de valider l'accès aux API, vous devez également valider les conditions d
 - **Python 3.8+** (version recommandée : 3.10+)
 - **pip** pour la gestion des paquets
 - **Git** pour cloner le dépôt
-- **Claude Desktop** (pour l'intégration MCP)
+- **Claude Desktop** ou **Cursor** (pour l'intégration MCP)
 
 ---
 
@@ -105,22 +105,25 @@ Afin de valider l'accès aux API, vous devez également valider les conditions d
 git clone https://github.com/jmtanguy/DroitFrancaisMCP.git
 cd DroitFrancaisMCP
 ```
+
 Ou télécharger le ZIP de ce projet.
 
 ### 2. Installation
 
 Exécuter le script d’installation correspondant à votre système d’exploitation :
+
 - Windows : install.ps1
 - macOS / Linux : install.sh
 
 Ces scripts effectuent automatiquement les opérations suivantes :
+
 - 📦 Création d’un environnement virtuel Python
 - 🔽 Installation de l’ensemble des dépendances nécessaires
 - ⚙️ Configuration du client Claude Desktop pour qu’il utilise ce serveur MCP
 
 ---
 
-## ⚙️ Configuration
+## ⚙️ Configuration {#configuration}
 
 ### 1. Créer le fichier d'environnement
 
@@ -145,7 +148,9 @@ PISTE_SANDBOX_CLIENT_SECRET=votre_client_secret_sandbox_ici
 
 > ⚠️ **SÉCURITÉ** : Le fichier `.env` contient vos secrets et ne doit **JAMAIS** être commité dans Git !
 
-### 3. Configuration de Claude Desktop
+### 3. Configuration des clients MCP
+
+#### Configuration Claude Desktop
 
 Pour utiliser le serveur avec Claude Desktop, vérifier cette configuration dans :
 
@@ -165,37 +170,77 @@ Pour utiliser le serveur avec Claude Desktop, vérifier cette configuration dans
 
 > 💡 **Conseil** : Remplacez `/chemin/absolu/vers/` par le chemin complet vers votre répertoire.
 
+#### Configuration Cursor
+
+Pour utiliser le serveur avec Cursor, ajoutez cette configuration dans votre fichier de configuration MCP (généralement `~/.cursor/mcp.json` ou dans les paramètres de Cursor) :
+
+```json
+{
+  "mcpServers": {
+    "DroitFrancaisMCP": {
+      "command": "<PATH_TO_DroitFrancaisMCP>/.venv/bin/python3",
+      "args": [
+        "-u",
+        "<PATH_TO_DroitFrancaisMCP>/droit_francais_MCP.py"
+      ],
+      "cwd": "<PATH_TO_DroitFrancaisMCP>",
+      "env": {
+        "PYTHONPATH": "<PATH_TO_DroitFrancaisMCP>",
+        "PYTHONUNBUFFERED": "1",
+        "PYTHONIOENCODING": "utf-8"
+      },
+      "envFile": "<PATH_TO_ENV_FILE>",
+      "description": "MCP server for French legal research (Légifrance, JudiLibre)",
+      "enabled": true
+    }
+  }
+}
+```
+
+> 💡 **Remplacez** :
+>
+> - `<PATH_TO_DroitFrancaisMCP>` par le chemin complet vers votre répertoire DroitFrancaisMCP
+> - `<PATH_TO_ENV_FILE>` par le chemin complet vers votre fichier `.env` contenant les identifiants PISTE
+
 ---
 
-## 📖 Utilisation
+## 📖 Utilisation {#utilisation}
 
 ### Démarrage du serveur
+
+#### Avec Claude Desktop
 
 1. Redémarrez Claude Desktop
 2. Le serveur devrait apparaître dans la liste des serveurs MCP disponibles
 3. Vous pouvez maintenant utiliser les outils directement dans Claude
 
+#### Avec Cursor
+
+1. Redémarrez Cursor
+2. Le serveur devrait apparaître dans la liste des serveurs MCP disponibles
+3. Vous pouvez maintenant utiliser les outils directement dans Cursor via le protocole MCP
+
 ## Exemples
 
-Dans Claude Desktop, essayez :
+Dans Claude Desktop ou Cursor, essayez :
 
-```
+```text
 Recherche-moi les articles sur le mariage dans le Code civil
 ```
 
-```
+```text
 Quels sont les arrêts récents de la Cour de cassation concernant le licenciement pour faute grave ?
 ````
 
-```
+```text
 Donne-moi le texte complet de la loi n° 2021-1109 du 24 août 2021 sur le respect des principes de la République
 ```
 
-Claude identifiera automatiquement les outils MCP adaptés pour interroger les sources officielles et vous présentera les résultats correspondants.
+Claude ou Cursor identifiera automatiquement les outils MCP adaptés pour interroger les sources officielles et vous présentera les résultats correspondants.
 
 ---
 
-## 🛠️ Outils disponibles
+## 🛠️ Outils disponibles {#outils-disponibles}
 
 ### Légifrance
 
@@ -214,9 +259,9 @@ Claude identifiera automatiquement les outils MCP adaptés pour interroger les s
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Architecture {#architecture}
 
-```
+```text
 DroitFrancaisMCP/
 ├── droit_francais_MCP.py          # Serveur MCP principal
 ├── api_legifrance.py              # Client API Légifrance
@@ -273,12 +318,14 @@ Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de 
 - [Site officiel PISTE](https://piste.gouv.fr/) - Demande d'accès aux API
 - [Model Context Protocol](https://modelcontextprotocol.io/) - Spécification MCP
 - [Claude Desktop](https://claude.ai/download) - Application Claude
+- [Cursor](https://cursor.sh/) - Éditeur de code avec support MCP
 
 ---
 
 ## 🤖 Développement avec IA
 
 Ce projet a été développé avec l'assistance d'outils d'intelligence artificielle :
+
 - **Claude** (Anthropic) - Assistant de développement et génération de code
 - **GitHub Copilot** - Autocomplétion de code
 
@@ -290,5 +337,4 @@ L'utilisation de ces outils a permis d'accélérer le développement tout en mai
 
 ## 👤 Auteur
 
-**Jean-Michel Tanguy**
-
+Jean-Michel Tanguy

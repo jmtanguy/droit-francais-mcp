@@ -34,7 +34,7 @@ Copyright (c) 2025 Jean-Michel Tanguy
 Licensed under the MIT License
 """
 
-#%%
+# %%
 # ============================================================================
 # IMPORTS ET INITIALISATION
 # ============================================================================
@@ -42,7 +42,7 @@ Licensed under the MIT License
 from api_judilibre import JudiLibreAPI
 from api_legifrance import LegiFranceAPI
 
-#%%
+# %%
 # ============================================================================
 # INITIALISATION API JUDILIBRE (SANDBOX)
 # ============================================================================
@@ -51,7 +51,7 @@ from api_legifrance import LegiFranceAPI
 
 api = JudiLibreAPI(sandbox=True)
 
-#%%
+# %%
 # ============================================================================
 # TEST 1: Récupération des sièges de cours d'appel
 # ============================================================================
@@ -60,7 +60,7 @@ api = JudiLibreAPI(sandbox=True)
 
 api.taxonomy("location", key="ca_rouen", context_value="ca")
 
-#%%
+# %%
 # ============================================================================
 # TEST 2: Lister tous les sièges de tribunaux de commerce
 # ============================================================================
@@ -70,7 +70,7 @@ api.taxonomy("location", key="ca_rouen", context_value="ca")
 api.taxonomy("location", context_value="tcom")
 
 
-#%%
+# %%
 # ============================================================================
 # TEST 3: Récupérer toutes les juridictions disponibles
 # ============================================================================
@@ -79,7 +79,7 @@ api.taxonomy("location", context_value="tcom")
 
 api.taxonomy("jurisdiction")
 
-#%%
+# %%
 # ============================================================================
 # TEST 4: Récupérer les chambres des tribunaux de commerce
 # ============================================================================
@@ -88,18 +88,15 @@ api.taxonomy("jurisdiction")
 
 api.taxonomy("chamber", context_value="tcom")
 
-#%%
+# %%
 # ============================================================================
 # EXEMPLES SUPPLÉMENTAIRES - Décommenter pour tester
 # ============================================================================
 
 # Recherche simple dans la jurisprudence
 results = api.search(
-     query="responsabilité contractuelle",
-     jurisdiction=["cc"],
-     chamber=["civ1"],
-     page_size=10
- )
+    query="responsabilité contractuelle", jurisdiction=["cc"], chamber=["civ1"], page_size=10
+)
 
 # Récupération d'une décision spécifique
 decision = api.decision("60794cff9ba5988459c47bf2")
@@ -117,14 +114,9 @@ decision = api.decision("60794cff9ba5988459c47bf2")
 api_lf = LegiFranceAPI(sandbox=True)
 
 # Recherche dans le Code civil
-results = api_lf.search(
-    query="mariage", 
-    fond="CODE_ETAT",
-    code_name="Code civil",
-    page_size=5
- )
+results = api_lf.search(query="mariage", fond="CODE_ETAT", code_name="Code civil", page_size=5)
 
 # %%
 # Recherche article
-article = api_lf.article("LEGIARTI000006422334")   
+article = api_lf.article("LEGIARTI000006422334")
 # %%

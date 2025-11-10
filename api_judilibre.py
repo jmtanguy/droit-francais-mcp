@@ -12,23 +12,23 @@ Remarques :
    et d’outils d’intelligence artificielle.
 """
 
-import requests
-from datetime import datetime, timedelta
 import os
-from typing import Optional, Dict, Any, List
-from dotenv import load_dotenv
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
+import requests
+from dotenv import load_dotenv
 
 
 class JudiLibreAPI:
     """
     Client OAuth pour l'API JudiLibre
     """
-    
+
     def __init__(self, sandbox: bool = True):
         """
         Initialise le client OAuth
-        
+
         Args:
             client_id: Identifiant client fourni par Légifrance
             client_secret: Secret client fourni par Légifrance
@@ -37,25 +37,24 @@ class JudiLibreAPI:
         if sandbox:
             self.client_id = os.getenv("PISTE_SANDBOX_CLIENT_ID")
             self.client_secret = os.getenv("PISTE_SANDBOX_CLIENT_SECRET")
-            self.token_url = 'https://sandbox-oauth.piste.gouv.fr/api/oauth/token'
+            self.token_url = "https://sandbox-oauth.piste.gouv.fr/api/oauth/token"
             self.base_url = "https://sandbox-api.piste.gouv.fr"
         else:
             self.client_id = os.getenv("PISTE_CLIENT_ID")
             self.client_secret = os.getenv("PISTE_CLIENT_SECRET")
-            self.token_url = 'https://sandbox-oauth.piste.gouv.fr/api/oauth/token'
-            self.base_url = "https://sandbox-api.piste.gouv.fr"
+            self.token_url = "https://oauth.piste.gouv.fr/api/oauth/token"
+            self.base_url = "https://api.piste.gouv.fr"
 
         self.api_url = f"{self.base_url}/cassation/judilibre/v1.0"
-        
+
         # Stockage du token
         self.access_token = None
         self.token_expires_at = None
-    
-    
+
     def get_access_token(self) -> str:
         """
         Obtient un token d'accès via OAuth 2.0 Client Credentials
-        
+
         Returns:
             Token d'accès
         """
@@ -67,42 +66,40 @@ class JudiLibreAPI:
         data = {
             "Accept-Encoding": "gzip,deflate",
             "Content-Type": "application/x-www-form-urlencoded",
-            "Host": self.token_url.replace('https://', '').split('/')[0],
+            "Host": self.token_url.replace("https://", "").split("/")[0],
             "Connection": "Keep-Alive",
             "grant_type": "client_credentials",
             "client_id": self.client_id,
             "client_secret": self.client_secret,
-            "scope": "openid"
+            "scope": "openid",
         }
 
         try:
-            response = requests.post(self.token_url,  data=data)
+            response = requests.post(self.token_url, data=data)
             response.raise_for_status()
-            
+
             token_data = response.json()
-            self.access_token = token_data['access_token']
-            
+            self.access_token = token_data["access_token"]
+
             # Calculer l'expiration du token (avec marge de sécurité)
-            expires_in = token_data.get('expires_in', 3600)
+            expires_in = token_data.get("expires_in", 3600)
             self.token_expires_at = datetime.now() + timedelta(seconds=expires_in - 60)
-            
+
             return self.access_token
-            
+
         except requests.exceptions.RequestException as e:
             raise Exception(f"Erreur lors de l'obtention du token: {e}")
-    
+
     def _get_api_headers(self) -> Dict[str, str]:
         """
         Génère les en-têtes pour les appels API
         """
         token = self.get_access_token()
         return {
-            'Authorization': f'Bearer {token}',
+            "Authorization": f"Bearer {token}",
             #'Content-Type': 'application/json',
             #'Accept': 'application/json'
         }
-    
-
 
     def search(
         self,
@@ -125,7 +122,7 @@ class JudiLibreAPI:
         page: int = 0,
         resolve_references: bool = False,
         withFileOfType: Optional[List[str]] = None,
-        particularInterest: bool = False
+        particularInterest: bool = False,
     ) -> List[Dict[str, Any]]:
         """
         Effectue une recherche dans la base de données ouverte des décisions de justice JudiLibre
@@ -261,9 +258,8 @@ class JudiLibreAPI:
             "page_size": page_size,
             "page": page,
             "resolve_references": "true" if resolve_references else "false",
-            "particularInterest": "true" if particularInterest else "false"
+            "particularInterest": "true" if particularInterest else "false",
         }
-
 
         # Ajouter les paramètres optionnels s'ils sont fournis
         if query:
@@ -294,11 +290,7 @@ class JudiLibreAPI:
             params["withFileOfType"] = withFileOfType
 
         try:
-            response = requests.get(
-                endpoint,
-                headers=self._get_api_headers(),
-                params=params
-            )
+            response = requests.get(endpoint, headers=self._get_api_headers(), params=params)
             response.raise_for_status()
 
             json = response.json()
@@ -309,13 +301,12 @@ class JudiLibreAPI:
         except Exception as e:
             raise Exception(f"Erreur inattendue lors de la recherche: {e}")
 
-    
     def decision(
         self,
         decision_id: str,
         resolve_references: bool = False,
         query: Optional[str] = None,
-        operator: str = "or"
+        operator: str = "or",
     ) -> Dict[str, Any]:
         """
         Permet de récupérer le contenu intégral d'une décision.
@@ -397,7 +388,9 @@ class JudiLibreAPI:
             )
         """
         if not decision_id or not decision_id.strip():
-            raise ValueError("L'identifiant de la décision est obligatoire et ne peut pas être vide")
+            raise ValueError(
+                "L'identifiant de la décision est obligatoire et ne peut pas être vide"
+            )
 
         if operator not in ["or", "and", "exact"]:
             raise ValueError("operator doit être 'or', 'and' ou 'exact'")
@@ -405,7 +398,7 @@ class JudiLibreAPI:
         endpoint = f"{self.api_url}/decision"
         params = {
             "id": decision_id,
-            "resolve_references": "true" if resolve_references else "false"
+            "resolve_references": "true" if resolve_references else "false",
         }
 
         # Ajouter les paramètres optionnels de recherche
@@ -414,11 +407,7 @@ class JudiLibreAPI:
             params["operator"] = operator
 
         try:
-            response = requests.get(
-                endpoint,
-                headers=self._get_api_headers(),
-                params=params
-            )
+            response = requests.get(endpoint, headers=self._get_api_headers(), params=params)
             response.raise_for_status()
 
             return response.json()
@@ -433,7 +422,7 @@ class JudiLibreAPI:
         taxonomy_id: Optional[str] = None,
         key: Optional[str] = None,
         value: Optional[str] = None,
-        context_value: Optional[str] = None
+        context_value: Optional[str] = None,
     ) -> Any:
         """
         Récupère les listes des termes employés par le processus de recherche
@@ -561,27 +550,23 @@ class JudiLibreAPI:
 
         if not params:
             # Aucun paramètre fourni : laisser l'appel API retourner la liste complète des taxonomies
-            TAXONOMY_DESCRIPTIONS = { 
-            "type": "Types de décision (arrêt, ordonnance, QPC, etc.)",
-            "jurisdiction": "Juridictions (Cour de cassation, cours d'appel, tribunaux, etc.)",
-            "chamber": "Chambres de la Cour de cassation (civile, sociale, criminelle, etc.)",
-            "formation": "Formations des juridictions",
-            "publication": "Niveaux de publication (bulletin, rapport, lettre, etc.)",
-            "theme": "Matières juridiques (nomenclature Cour de cassation)",
-            "solution": "Types de solution (cassation, rejet, annulation, etc.)",
-            "field": "Champs et zones de contenu (exposé, moyens, motivations, dispositif, etc.)",
-            "zones": "Zones de contenu des décisions",
-            "location": "Codes des sièges de juridiction (cours d'appel, tribunaux)",
-            "filetype": "Types de documents associés (rapports, avis, communiqués, etc.)"
+            TAXONOMY_DESCRIPTIONS = {
+                "type": "Types de décision (arrêt, ordonnance, QPC, etc.)",
+                "jurisdiction": "Juridictions (Cour de cassation, cours d'appel, tribunaux, etc.)",
+                "chamber": "Chambres de la Cour de cassation (civile, sociale, criminelle, etc.)",
+                "formation": "Formations des juridictions",
+                "publication": "Niveaux de publication (bulletin, rapport, lettre, etc.)",
+                "theme": "Matières juridiques (nomenclature Cour de cassation)",
+                "solution": "Types de solution (cassation, rejet, annulation, etc.)",
+                "field": "Champs et zones de contenu (exposé, moyens, motivations, dispositif, etc.)",
+                "zones": "Zones de contenu des décisions",
+                "location": "Codes des sièges de juridiction (cours d'appel, tribunaux)",
+                "filetype": "Types de documents associés (rapports, avis, communiqués, etc.)",
             }
             return TAXONOMY_DESCRIPTIONS
 
         try:
-            response = requests.get(
-                endpoint,
-                headers=self._get_api_headers(),
-                params=params
-            )
+            response = requests.get(endpoint, headers=self._get_api_headers(), params=params)
             response.raise_for_status()
 
             json = response.json()
@@ -589,7 +574,9 @@ class JudiLibreAPI:
 
         except requests.exceptions.RequestException as e:
             if taxonomy_id:
-                raise Exception(f"Erreur lors de la récupération de la taxonomie '{taxonomy_id}': {e}")
+                raise Exception(
+                    f"Erreur lors de la récupération de la taxonomie '{taxonomy_id}': {e}"
+                )
             else:
                 raise Exception(f"Erreur lors de la récupération des taxonomies: {e}")
 

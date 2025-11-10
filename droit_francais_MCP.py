@@ -11,14 +11,15 @@ Remarques :
    et d’outils d’intelligence artificielle.
 """
 
-from fastmcp import FastMCP
 import logging
 import sys
-from typing import Optional, Dict, Any, List
-from api_legifrance import LegiFranceAPI
-from api_judilibre import JudiLibreAPI
-from __version__ import __version__, __author__, __description__
+from typing import Any, Dict, List, Optional
 
+from fastmcp import FastMCP
+
+from __version__ import __author__, __description__, __version__
+from api_judilibre import JudiLibreAPI
+from api_legifrance import LegiFranceAPI
 
 # ============================================================================
 # CONFIGURATION ET INITIALISATION
@@ -27,11 +28,11 @@ from __version__ import __version__, __author__, __description__
 # Configuration du logging pour debugging
 logging.basicConfig(
     level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     handlers=[
         logging.StreamHandler(sys.stderr),  # Envoi vers stderr pour MCP
-        #logging.FileHandler('droit_francais_mcp.log')  # Fichier de log
-    ]
+        # logging.FileHandler('droit_francais_mcp.log')  # Fichier de log
+    ],
 )
 logger = logging.getLogger(__name__)
 
@@ -64,10 +65,10 @@ except Exception as e:
     judilibreapi = None
 
 
-
 # ============================================================================
 # OUTILS LEGIFRANCE - RECHERCHE DES TEXTES DE DROIT FRANÇAIS
 # ============================================================================
+
 
 @mcp.tool
 def rechercher_droit_francais(
@@ -81,7 +82,7 @@ def rechercher_droit_francais(
     page_number: int = 1,
     page_size: int = 10,
     sort: Optional[str] = None,
-    operateur: str = "ET"
+    operateur: str = "ET",
 ) -> List[Dict[str, Any]]:
     """
     🇫🇷 RECHERCHE AVANCÉE OFFICIELLE dans la base juridique française Légifrance.
@@ -170,7 +171,7 @@ def rechercher_droit_francais(
     Returns:
         Liste des résultats avec métadonnées
 
-    Répondre factuellement en faisant un résumé des résultats trouvés et en indiquant les IDs des articles pertinents et en affichant le titre et le lien direct vers Légifrance.    
+    Répondre factuellement en faisant un résumé des résultats trouvés et en indiquant les IDs des articles pertinents et en affichant le titre et le lien direct vers Légifrance.
     ⚠️ ÉTAPE SUIVANTE OBLIGATOIRE: Utilisez obtenir_article(article_id) pour le contenu complet!
 
     Examples:
@@ -247,7 +248,7 @@ def rechercher_droit_francais(
             page_number=page_number,
             page_size=page_size,
             sort=sort,
-            operateur=operateur
+            operateur=operateur,
         )
 
         total_results = len(search_results)
@@ -354,8 +355,8 @@ def obtenir_article(article_id: str) -> Dict[str, Any]:
     Ajouter le contenu principal et l'intérêt juridique de l'article si pertinent.
 
     ⚠️ EXPLOITER LES LIENS: Si pertinent, mentionner les articles liés (liens.CITATION)
-    pour permettre à l'utilisateur d'approfondir sa recherche. 
-    
+    pour permettre à l'utilisateur d'approfondir sa recherche.
+
     WORKFLOW TYPIQUE:
         1. Rechercher avec UN outil de recherche:
            - rechercher_droit_francais_etendue() [recherche avancée]
@@ -424,12 +425,13 @@ def obtenir_article(article_id: str) -> Dict[str, Any]:
 # OUTILS JUDILIBRE - RECHERCHE DE JURISPRUDENCE
 # ============================================================================
 
+
 @mcp.tool
 def obtenir_taxonomie_judilibre(
     taxonomy_id: Optional[str] = None,
     key: Optional[str] = None,
     value: Optional[str] = None,
-    context_value: Optional[str] = None
+    context_value: Optional[str] = None,
 ) -> List | Dict[str, Any]:
     """
     📚 TAXONOMIE JUDILIBRE - Récupère les listes des termes pour construire des recherches.
@@ -514,7 +516,9 @@ def obtenir_taxonomie_judilibre(
         # Convertir une clé en nom
         obtenir_taxonomie_judilibre(taxonomy_id="jurisdiction", key="cc")
     """
-    logger.debug(f"APPEL: obtenir_taxonomie_judilibre(taxonomy_id='{taxonomy_id}', key='{key}', value='{value}', context_value='{context_value}')")
+    logger.debug(
+        f"APPEL: obtenir_taxonomie_judilibre(taxonomy_id='{taxonomy_id}', key='{key}', value='{value}', context_value='{context_value}')"
+    )
 
     try:
         if judilibreapi is None:
@@ -522,10 +526,7 @@ def obtenir_taxonomie_judilibre(
             return {"erreur": "L'API JudiLibre n'est pas initialisée"}
 
         result = judilibreapi.taxonomy(
-            taxonomy_id=taxonomy_id,
-            key=key,
-            value=value,
-            context_value=context_value
+            taxonomy_id=taxonomy_id, key=key, value=value, context_value=context_value
         )
 
         logger.info(f"Taxonomie récupérée: {taxonomy_id or 'all'}")
@@ -550,7 +551,7 @@ def rechercher_jurisprudence_judilibre(
     tri: str = "scorepub",
     ordre: str = "desc",
     nombre_resultats: int = 10,
-    page: int = 0
+    page: int = 0,
 ) -> List[Dict[str, Any]]:
     """
     ⚖️ RECHERCHE DE JURISPRUDENCE dans la base JudiLibre (décisions de justice françaises).
@@ -639,8 +640,8 @@ def rechercher_jurisprudence_judilibre(
     - **"desc"** (défaut) : Décroissant (du plus récent/pertinent au moins)
     - **"asc"** : Croissant (du plus ancien/moins pertinent au plus)
 
-    Répondre factuellement en faisant un résumé des résultats trouvés et en indiquant les IDs des articles pertinents et en affichant le titre et le lien direct vers Légifrance.    
-    
+    Répondre factuellement en faisant un résumé des résultats trouvés et en indiquant les IDs des articles pertinents et en affichant le titre et le lien direct vers Légifrance.
+
     ⚠️ ÉTAPE SUIVANTE OBLIGATOIRE :
     Les résultats contiennent uniquement des APERÇUS. Pour obtenir le TEXTE COMPLET
     d'une décision pertinente, vous DEVEZ utiliser :
@@ -718,7 +719,9 @@ def rechercher_jurisprudence_judilibre(
             date_debut="2023-01-01"
         )
     """
-    logger.debug(f"APPEL: rechercher_jurisprudence_judilibre(query='{query}', juridiction='{juridiction}')")
+    logger.debug(
+        f"APPEL: rechercher_jurisprudence_judilibre(query='{query}', juridiction='{juridiction}')"
+    )
 
     try:
         if judilibreapi is None:
@@ -733,7 +736,9 @@ def rechercher_jurisprudence_judilibre(
         theme_list = [theme] if theme else None
         solution_list = [solution] if solution else None
 
-        logger.info(f"Recherche JudiLibre: '{query}' - Juridiction: {juridiction or 'toutes'} - Localisation: {localisation or 'toutes'}")
+        logger.info(
+            f"Recherche JudiLibre: '{query}' - Juridiction: {juridiction or 'toutes'} - Localisation: {localisation or 'toutes'}"
+        )
 
         results = judilibreapi.search(
             query=query,
@@ -749,7 +754,7 @@ def rechercher_jurisprudence_judilibre(
             order=ordre,
             page_size=nombre_resultats,
             page=page,
-            resolve_references=True  # Obtenir les intitulés complets
+            resolve_references=True,  # Obtenir les intitulés complets
         )
 
         logger.info(f"Résultats trouvés: {len(results)}")
@@ -901,7 +906,7 @@ def obtenir_decision_judilibre(decision_id: str) -> Dict[str, Any]:
     les parties pertinentes (motivations pour l'analyse, dispositif pour la solution).
 
     ⚠️ MENTIONNER LES RÉFÉRENCES: Si pertinent, citer les textes appliqués (visa)
-    et les rapprochements de jurisprudence pour approfondir. 
+    et les rapprochements de jurisprudence pour approfondir.
 
     WORKFLOW TYPIQUE :
         1. Rechercher : rechercher_jurisprudence_judilibre("responsabilité")
@@ -943,13 +948,12 @@ def obtenir_decision_judilibre(decision_id: str) -> Dict[str, Any]:
         logger.info(f"Récupération de la décision: {decision_id}")
 
         decision = judilibreapi.decision(
-            decision_id=decision_id,
-            resolve_references=True  # Obtenir les intitulés complets
+            decision_id=decision_id, resolve_references=True  # Obtenir les intitulés complets
         )
 
         # Mise en évidence de la solution dans le résultat
-        if decision and 'solution' in decision:
-            decision['⭐ SOLUTION ⭐'] = decision['solution'].upper()
+        if decision and "solution" in decision:
+            decision["⭐ SOLUTION ⭐"] = decision["solution"].upper()
 
         logger.info(f"Décision récupérée avec succès: {decision_id}")
         return decision
@@ -957,7 +961,6 @@ def obtenir_decision_judilibre(decision_id: str) -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"Erreur lors de la récupération de la décision '{decision_id}': {e}")
         return {"erreur": f"Erreur récupération décision: {str(e)}"}
-
 
 
 if __name__ == "__main__":
