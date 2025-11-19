@@ -33,7 +33,7 @@ Pour exécuter les tests:
 
 import pytest
 
-from api_judilibre import JudiLibreAPI
+from api_judilibre import JudilibreAPI
 
 # Marquer tous les tests comme tests d'intégration car ils appellent l'API réelle
 pytestmark = pytest.mark.integration
@@ -46,7 +46,7 @@ def api():
     Fixture qui crée une instance unique de JudiLibreAPI pour tous les tests.
     L'instance est créée une seule fois au début et réutilisée pour tous les tests.
     """
-    return JudiLibreAPI(sandbox=True)
+    return JudilibreAPI(sandbox=True)
 
 
 def test_init_sandbox(api):
@@ -203,8 +203,8 @@ def test_search_pagination(api):
 
     # Vérifier que les résultats sont différents (si disponibles)
     if len(results_page1) > 0 and len(results_page2) > 0:
-        id_page1 = results_page1[0].get("id")
-        id_page2 = results_page2[0].get("id")
+        id_page1 = results_page1["results"][0].get("id")
+        id_page2 = results_page2["results"][0].get("id")
         if id_page1 and id_page2:
             assert id_page1 != id_page2, "Les résultats des deux pages doivent être différents"
 
@@ -289,7 +289,7 @@ def test_decision_with_resolve_references(api):
     if search_results and "results" in search_results and len(search_results["results"]) > 0:
         decision_id = search_results["results"][0].get("id")
         if decision_id:
-            decision = api.decision(decision_id, resolve_references=True)
+            decision = api.consult(decision_id, resolve_references=True)
             assert decision is not None
 
 
@@ -298,26 +298,23 @@ def test_decision_with_query_highlight(api):
 
     # Obtenir un ID valide
     search_results = api.search(query="divorce", page_size=1)
-
-    if search_results and "results" in search_results and len(search_results["results"]) > 0:
-        decision_id = search_results["results"][0].get("id")
-        if decision_id:
-            decision = api.decision(decision_id, query="divorce", operator="or")
-            assert decision is not None
+    decision_id = search_results["results"][0].get("id")
+    decision = api.consult(decision_id, query="divorce", operator="or")
+    assert decision is not None
 
 
 def test_decision_empty_id(api):
     """Test qu'une erreur est levée si l'ID est vide"""
 
     with pytest.raises(ValueError, match="L'identifiant de la décision est obligatoire"):
-        api.decision("")
+        api.consult("")
 
 
 def test_decision_invalid_operator(api):
     """Test qu'une erreur est levée pour un opérateur invalide dans decision()"""
 
     with pytest.raises(ValueError, match="operator doit être"):
-        api.decision("test_id", query="test", operator="invalid")
+        api.consult("test_id", query="test", operator="invalid")
 
 
 def test_taxonomy_jurisdiction(api):
@@ -420,7 +417,7 @@ if __name__ == "__main__":
     print("Exécution des tests JudiLibre...")
 
     # Créer une instance unique de l'API pour tous les tests
-    api_instance = JudiLibreAPI(sandbox=True)
+    api_instance = JudilibreAPI(sandbox=True)
 
     print("\nTest 1: Initialisation")
     test_init_sandbox(api_instance)

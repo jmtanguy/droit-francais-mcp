@@ -7,7 +7,7 @@ Copyright (c) 2025 Jean-Michel Tanguy
 Licensed under the MIT License (see LICENSE file)
 """
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __author__ = "Jean-Michel Tanguy"
 __license__ = "MIT"
 __description__ = (

@@ -13,14 +13,12 @@ Remarques :
 """
 
 import os
+import requests
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
-
-import requests
 from dotenv import load_dotenv
 
-
-class JudiLibreAPI:
+class JudilibreAPI:
     """
     Client OAuth pour l'API JudiLibre
     """
@@ -97,20 +95,18 @@ class JudiLibreAPI:
         token = self.get_access_token()
         return {
             "Authorization": f"Bearer {token}",
-            #'Content-Type': 'application/json',
-            #'Accept': 'application/json'
         }
 
     def search(
         self,
         query: Optional[str] = None,
         field: Optional[List[str]] = None,
-        operator: str = "or",
+        operator: str = "and",
         type: Optional[List[str]] = None,
         theme: Optional[List[str]] = None,
         chamber: Optional[List[str]] = None,
         formation: Optional[List[str]] = None,
-        jurisdiction: Optional[List[str]] = None,
+        jurisdiction: Optional[List[str]] = ["cc", "ca", "tj", "tcom"], # Par défaut toutes les juridictions
         location: Optional[List[str]] = None,
         publication: Optional[List[str]] = None,
         solution: Optional[List[str]] = None,
@@ -120,10 +116,10 @@ class JudiLibreAPI:
         order: str = "desc",
         page_size: int = 50,
         page: int = 0,
-        resolve_references: bool = False,
+        resolve_references: bool = True,
         withFileOfType: Optional[List[str]] = None,
         particularInterest: bool = False,
-    ) -> List[Dict[str, Any]]:
+    ) -> Any:
         """
         Effectue une recherche dans la base de données ouverte des décisions de justice JudiLibre
 
@@ -137,7 +133,7 @@ class JudiLibreAPI:
                    manquant est appliquée à l'intégralité de la décision (introduction et
                    moyens annexés compris) mais va exclure les métadonnées (sommaire, titrage, etc.).
             operator: Opérateur logique reliant les multiples termes que le paramètre query
-                     peut contenir (or par défaut, and ou exact – dans ce dernier cas le
+                     peut contenir (or , and par défaut ou exact – dans ce dernier cas le
                      moteur recherchera exactement le contenu du paramètre query).
             type: Filtre les résultats suivant la nature des décisions (parmi les valeurs :
                   arret, qpc, ordonnance, saisie, etc. - les valeurs disponibles sont
@@ -213,7 +209,7 @@ class JudiLibreAPI:
                  (la première page valant 0).
             resolve_references: Lorsque ce paramètre vaut true, le résultat de la requête
                                contiendra, pour chaque information retournée par défaut sous
-                               forme de clé, l'intitulé complet de celle-ci (vaut false par défaut).
+                               forme de clé, l'intitulé complet de celle-ci (vaut true par défaut).
             withFileOfType: Filtre les résultats suivant le type de documents associés aux
                            décisions, parmi les valeurs : prep_rapp (Rapport du rapporteur),
                            prep_avis (Avis de l'avocat général), prep_oral (Avis oral de
@@ -232,11 +228,9 @@ class JudiLibreAPI:
             ValueError: Si les paramètres sont invalides
             Exception: Erreurs de requête API
         """
-        # Validation des paramètres
-        # Note: selon la spec, query peut être vide/manquant (retourne résultat vide)
-
+       
         if page_size > 50:
-            raise ValueError("page_size ne peut pas dépasser 50")
+            page_size = 50  # Limite maximale
 
         if operator not in ["or", "and", "exact"]:
             raise ValueError("operator doit être 'or', 'and' ou 'exact'")
@@ -292,22 +286,21 @@ class JudiLibreAPI:
         try:
             response = requests.get(endpoint, headers=self._get_api_headers(), params=params)
             response.raise_for_status()
-
             json = response.json()
-            return json.get("results", [json])
+            return self.clean(json)
 
         except requests.exceptions.RequestException as e:
-            raise Exception(f"Erreur lors de la recherche JudiLibre: {e}")
+            raise Exception(f"Erreur lors de la recherche JudiLibre")
         except Exception as e:
-            raise Exception(f"Erreur inattendue lors de la recherche: {e}")
+            raise Exception(f"Erreur inattendue lors de la recherche")
 
-    def decision(
+    def consult(
         self,
         decision_id: str,
         resolve_references: bool = False,
         query: Optional[str] = None,
-        operator: str = "or",
-    ) -> Dict[str, Any]:
+        operator: str = "and",
+    ) -> Any:
         """
         Permet de récupérer le contenu intégral d'une décision.
 
@@ -409,13 +402,14 @@ class JudiLibreAPI:
         try:
             response = requests.get(endpoint, headers=self._get_api_headers(), params=params)
             response.raise_for_status()
-
-            return response.json()
+            json = response.json()
+            return self.clean(json)
 
         except requests.exceptions.RequestException as e:
-            raise Exception(f"Erreur lors de la récupération de la décision '{decision_id}': {e}")
+            raise Exception(f"Erreur lors de la récupération de la décision '{decision_id}'")
         except Exception as e:
-            raise Exception(f"Erreur inattendue lors de la récupération de la décision: {e}")
+            raise Exception(f"Erreur inattendue lors de la récupération de la décision")
+
 
     def taxonomy(
         self,
@@ -441,7 +435,7 @@ class JudiLibreAPI:
         - publication : Niveaux de publication (b, r, l, c, etc.)
         - theme : Matières (nomenclature Cour de cassation)
         - solution : Solutions (annulation, cassation, rejet, etc.)
-        - field : Champs et zones de contenu (expose, moyens, motivations, dispositif, etc.)
+        - field : Champs et zones. de contenu (expose, moyens, motivations, dispositif, etc.)
         - zones : Zones de contenu des décisions
         - location : Codes des sièges de juridiction (avec context_value)
         - filetype : Types de documents associés
@@ -568,9 +562,10 @@ class JudiLibreAPI:
         try:
             response = requests.get(endpoint, headers=self._get_api_headers(), params=params)
             response.raise_for_status()
-
             json = response.json()
-            return json.get("result", json)
+            # Un tableau est retourné si plusieurs décisions sont demandées, à défaut le réponse complète
+            result = json.get("result", json)
+            return result
 
         except requests.exceptions.RequestException as e:
             if taxonomy_id:
@@ -581,5 +576,47 @@ class JudiLibreAPI:
                 raise Exception(f"Erreur lors de la récupération des taxonomies: {e}")
 
 
-# La fonction main() a été déplacée vers test_api.py pour éviter les conflits avec FastMCP
-# Utilisez test_api.py pour tester cette classe
+    def clean(self, x, depth=0, max_depth=5):
+            """
+            Nettoie un dictionnaire ou une liste en ne conservant que les clés autorisées et en supprimant les valeurs None ou vides.
+
+            Args:
+                x (dict or list): Dictionnaire ou liste à nettoyer.
+
+            Returns:
+                dict or list: Structure nettoyée avec uniquement les clés autorisées.
+            """
+            # Liste des clés à conserver
+            allowed_keys = {
+                "text" , "id", "jurisdiction", "chamber", "formation", "type", "theme",
+                "publication","decision_date","solution","jurisdiction","score"
+            }
+
+            # Arrêter la descente si on a atteint la profondeur maximale
+            if depth >= max_depth:
+                return None
+
+            if isinstance(x, dict):
+                cleaned = {}
+                for k, v in x.items():
+                    if v:  # Ignorer les valeurs vides
+                        if k in allowed_keys and not isinstance(v, (dict, list)):
+                            # Clé autorisée : conserver la valeur
+                            cleaned[k] = v
+                        elif isinstance(v, (dict, list)):
+                            # Valeur est dict/list : descendre dans la hiérarchie
+                            cleaned_value = self.clean(v, depth + 1, max_depth)
+                            if cleaned_value:  # Ne garder que si le résultat n'est pas vide
+                                cleaned[k] = cleaned_value
+                return cleaned if cleaned else None
+
+            if isinstance(x, list):
+                # Si la liste contient uniquement des chaînes de caractères, la garder intacte
+                if x and all(isinstance(item, str) for item in x):
+                    return x
+                # Sinon, traiter récursivement
+                l = [cleaned_v for v in x if v and (cleaned_v := self.clean(v, depth + 1, max_depth)) is not None]
+                return l if l else None
+
+            return x
+        

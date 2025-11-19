@@ -1,6 +1,6 @@
 # 🏛️ Serveur MCP Droit Français
 
-[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/jmtanguy/DroitFrancaisMCP/releases)
+[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](https://github.com/jmtanguy/DroitFrancaisMCP/releases)
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![MCP](https://img.shields.io/badge/MCP-Compatible-purple)](https://modelcontextprotocol.io/)
@@ -34,10 +34,14 @@ Grâce à ce serveur, il devient possible de rechercher et de consulter :
 - [Installation](#-installation)
 - [Configuration](#configuration)
 - [Utilisation](#utilisation)
+- [Exemples d'utilisation](#-exemples-dutilisation)
 - [Outils disponibles](#outils-disponibles)
 - [Architecture](#architecture)
 - [Tests](#-tests)
 - [Licence](#-licence)
+- [Liens utiles](#-liens-utiles)
+- [Développement avec IA](#-développement-avec-ia)
+- [Auteur](#-auteur)
 
 ---
 
@@ -123,7 +127,7 @@ Ces scripts effectuent automatiquement les opérations suivantes :
 
 ---
 
-## ⚙️ Configuration {#configuration}
+## ⚙️ Configuration
 
 ### 1. Créer le fichier d'environnement
 
@@ -204,7 +208,7 @@ Pour utiliser le serveur avec Cursor, ajoutez cette configuration dans votre fic
 
 ---
 
-## 📖 Utilisation {#utilisation}
+## 📖 Utilisation
 
 ### Démarrage du serveur
 
@@ -220,67 +224,151 @@ Pour utiliser le serveur avec Cursor, ajoutez cette configuration dans votre fic
 2. Le serveur devrait apparaître dans la liste des serveurs MCP disponibles
 3. Vous pouvez maintenant utiliser les outils directement dans Cursor via le protocole MCP
 
-## Exemples
+## 💡 Exemples d'utilisation
 
-Dans Claude Desktop ou Cursor, essayez :
+Dans Claude Desktop ou Cursor, essayez ces requêtes en langage naturel :
+
+### 📖 Recherche dans les Codes
 
 ```text
 Recherche-moi les articles sur le mariage dans le Code civil
 ```
 
-```text
-Quels sont les arrêts récents de la Cour de cassation concernant le licenciement pour faute grave ?
-````
+→ Claude utilisera `rechercher_legifrance()` avec les paramètres appropriés
 
 ```text
-Donne-moi le texte complet de la loi n° 2021-1109 du 24 août 2021 sur le respect des principes de la République
+Trouve les articles du Code du travail concernant le licenciement économique
 ```
+
+→ Recherche ciblée dans le fond CODE_ETAT
+
+### ⚖️ Recherche de jurisprudence
+
+```text
+Quels sont les arrêts récents de la Cour de cassation concernant le licenciement pour faute grave ?
+```
+
+→ Claude utilisera `rechercher_jurisprudence_judilibre()` avec filtres de date et de thème
+
+```text
+Trouve les décisions de la Chambre sociale sur le harcèlement moral depuis 2020
+```
+
+→ Recherche avec filtre de chambre et période
+
+### 🔍 Recherches avancées
+
+```text
+Liste les décisions de la Cour d'appel de Paris sur la responsabilité médicale en 2023
+```
+
+→ Utilisation des filtres de localisation, juridiction et date
+
+```text
+Cherche dans le JORF les décrets publiés en janvier 2024 concernant l'environnement
+```
+
+→ Recherche avec filtres de fond, date et mot-clé
 
 Claude ou Cursor identifiera automatiquement les outils MCP adaptés pour interroger les sources officielles et vous présentera les résultats correspondants.
 
 ---
 
-## 🛠️ Outils disponibles {#outils-disponibles}
+## 🛠️ Outils disponibles
 
 ### Légifrance
 
 | Outil | Description |
 |-------|-------------|
-| `rechercher_droit_francais()` | Recherche avancée multi-critères dans tous les fonds juridiques |
-| `obtenir_article()` | Récupération du texte intégral d'un article avec métadonnées |
+| `rechercher_legifrance()` | Recherche avancée multi-critères dans tous les fonds juridiques (codes, lois, JORF, jurisprudence, conventions collectives) |
+| `consulter_legifrance()` | Récupération du texte intégral d'un article/texte avec métadonnées complètes |
+
+**Paramètres principaux** :
+
+- `recherche` : Terme(s) de recherche
+- `fond` : Fonds de recherche (ALL, CODE_ETAT, LODA_ETAT, JORF, JURI, KALI, etc.)
+- `type_champ` : Champ de recherche (ALL, TITLE, ARTICLE, etc.)
+- `type_recherche` : Type de recherche (TOUS_LES_MOTS_DANS_UN_CHAMP, UN_DES_MOTS, EXACTE)
+- `code` : Nom du code pour recherche spécifique (ex: "Code civil")
+- `date_debut`, `date_fin` : Filtres de dates (format YYYY-MM-DD)
+- `page`, `page_taille` : Pagination des résultats
+- `tri` : Ordre de tri (PERTINENCE, SIGNATURE_DATE_DESC, etc.)
 
 ### JudiLibre
 
 | Outil | Description |
 |-------|-------------|
-| `rechercher_jurisprudence_judilibre()` | Recherche de décisions de justice avec filtres avancés |
-| `obtenir_decision_judilibre()` | Récupération du texte intégral d'une décision |
-| `obtenir_taxonomie_judilibre()` | Accès aux listes de valeurs valides (chambres, juridictions, etc.) |
+| `rechercher_jurisprudence_judilibre()` | Recherche de décisions de justice avec filtres avancés (juridiction, chambre, thème, solution, dates) |
+| `consulter_decision_judilibre()` | Récupération du texte intégral d'une décision avec zones structurées |
+| `obtenir_taxonomie_judilibre()` | Accès aux listes de valeurs valides (chambres, juridictions, localisations, thèmes, solutions) |
+
+**Paramètres principaux** :
+
+- `recherche` : Texte de recherche
+- `juridiction` : Code juridiction (cc, ca, tj, ta, caa, ce, tc, crc)
+- `chambre` : Code chambre (civ1, civ2, civ3, comm, soc, cr, etc.)
+- `localisation` : Code siège de juridiction (ex: ca_paris, tj75101)
+- `type_decision` : Type de décision (arret, ordonnance, qpc, saisie)
+- `theme` : Matière juridique
+- `solution` : Type de solution (cassation, rejet, annulation, etc.)
+- `date_debut`, `date_fin` : Intervalle de dates
+- `tri` : Tri (scorepub, score, date)
+- `ordre` : Sens du tri (desc, asc)
+
+### 📚 Ressources de documentation intégrées
+
+Le serveur MCP expose également des ressources de documentation accessibles directement dans Claude :
+
+**Légifrance** :
+
+- `legifrance://documentation/fonds` - Liste des fonds de recherche disponibles
+- `legifrance://documentation/champs` - Types de champs de recherche
+- `legifrance://documentation/types-recherche` - Types de recherche disponibles
+- `legifrance://documentation/options-tri` - Options de tri
+- `legifrance://documentation/filtres-dates` - Guide des filtres de dates
+
+**JudiLibre** :
+
+- `judilibre://documentation/juridictions` - Codes de juridictions
+- `judilibre://documentation/chambres` - Chambres de la Cour de cassation
+- `judilibre://documentation/localisations` - Codes de localisations (sièges)
+- `judilibre://documentation/types-decision` - Types de décision
+- `judilibre://documentation/themes` - Thèmes (matières juridiques)
+- `judilibre://documentation/solutions` - Types de solutions
+- `judilibre://documentation/options-tri` - Options de tri
+
+Ces ressources permettent à Claude d'accéder à la documentation technique sans que vous ayez besoin de la fournir manuellement.
 
 ---
 
-## 🏗️ Architecture {#architecture}
+## 🏗️ Architecture
 
 ```text
 DroitFrancaisMCP/
-├── droit_francais_MCP.py          # Serveur MCP principal
-├── api_legifrance.py              # Client API Légifrance
-├── api_legifrance_search_input.py # Modèles de requête Légifrance
-├── api_legifrance_search_output.py# Modèles de réponse Légifrance
-├── api_judilibre.py               # Client API JudiLibre
-├── test_api_legifrance.py         # Tests Légifrance
-├── test_api_judilibre.py          # Tests JudiLibre
-├── requirements.txt               # Dépendances Python
-├── .env.example                   # Template de configuration
-└── README.md                      # Documentation
+├── droit_francais_MCP.py              # Serveur MCP principal
+├── api_legifrance.py                  # Client API Légifrance
+├── api_legifrance_query_builder.py   # Constructeur de requêtes Légifrance
+├── api_judilibre.py                   # Client API JudiLibre
+├── __version__.py                     # Informations de version
+├── test_api_legifrance.py             # Tests Légifrance
+├── test_api_judilibre.py              # Tests JudiLibre
+├── pyproject.toml                     # Configuration du projet
+├── .env.example                       # Template de configuration
+├── README.md                          # Documentation
+├── CHANGELOG.md                       # Historique des versions
+├── LICENSE                            # Licence MIT
+├── install.sh                         # Script d'installation (macOS/Linux)
+└── install.ps1                        # Script d'installation (Windows)
 ```
 
 ### Composants principaux
 
-- **`droit_francais_MCP.py`** : Serveur MCP qui expose les outils via FastMCP
-- **`api_legifrance.py`** : Client pour l'API Légifrance avec authentification OAuth
-- **`api_judilibre.py`** : Client pour l'API JudiLibre avec gestion des tokens
-- **Tests** : Scripts de validation des fonctionnalités
+- **`droit_francais_MCP.py`** : Serveur MCP qui expose les outils via FastMCP avec documentation complète des ressources
+- **`api_legifrance.py`** : Client pour l'API Légifrance avec authentification OAuth 2.0
+- **`api_legifrance_query_builder.py`** : Constructeur de requêtes complexes pour Légifrance
+- **`api_judilibre.py`** : Client pour l'API JudiLibre avec gestion automatique des tokens
+- **`__version__.py`** : Centralisation des informations de version du projet
+- **Tests** : Scripts de validation et exemples d'utilisation des APIs
 
 ---
 

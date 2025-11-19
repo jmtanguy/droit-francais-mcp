@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "droit-francais-mcp"
-version = "1.1.0"
+version = "1.2.0"
 description = "Serveur MCP pour interroger les API publiques du droit français (Légifrance et JudiLibre)"
 authors = [
     {name = "Jean-Michel Tanguy"}
@@ -51,18 +51,17 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/votre-utilisateur/DroitFrancaisMCP"
-Documentation = "https://github.com/votre-utilisateur/DroitFrancaisMCP#readme"
-Repository = "https://github.com/votre-utilisateur/DroitFrancaisMCP"
-Issues = "https://github.com/votre-utilisateur/DroitFrancaisMCP/issues"
+Homepage = "https://github.com/jmtanguy/DroitFrancaisMCP"
+Documentation = "https://github.com/jmtanguy/DroitFrancaisMCP#readme"
+Repository = "https://github.com/jmtanguy/DroitFrancaisMCP"
+Issues = "https://github.com/jmtanguy/DroitFrancaisMCP/issues"
 
 [tool.setuptools]
 py-modules = [
     "droit_francais_MCP",
     "api_legifrance",
     "api_judilibre",
-    "api_legifrance_search_input",
-    "api_legifrance_search_output",
+    "api_legifrance_query_builder",
     "__version__",
 ]
 

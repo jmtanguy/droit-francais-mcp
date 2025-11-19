@@ -16,7 +16,7 @@ import json
 from typing import Any, Dict, List, Optional
 
 
-class LegiFranceSearchInput:
+class LegifranceQueryBuilder:
     """Générateur de requêtes pour l'API Légifrance"""
 
     # Constantes pour les types de recherche
@@ -262,6 +262,7 @@ class LegiFranceSearchInput:
 
     # Constantes pour les fonds avec descriptions
     FONDS = {
+        "ALL": "ALL",  # Tous les fonds - Recherche transversale
         "JORF": "JORF",  # Journal Officiel de la République Française - Textes publiés au JO
         "CNIL": "CNIL",  # Commission Nationale de l'Informatique et des Libertés - Décisions et délibérations
         "CETAT": "CETAT",  # Conseil d'État - Jurisprudence administrative
@@ -273,13 +274,17 @@ class LegiFranceSearchInput:
         "CODE_ETAT": "CODE_ETAT",  # Codes consolidés - Recherche par état juridique
         "LODA_DATE": "LODA_DATE",  # Lois, Ordonnances, Décrets, Arrêtés - Recherche par date de version
         "LODA_ETAT": "LODA_ETAT",  # Lois, Ordonnances, Décrets, Arrêtés - Recherche par état juridique
-        "ALL": "ALL",  # Tous les fonds - Recherche transversale
         "CIRC": "CIRC",  # Circulaires et instructions - Textes d'application
         "ACCO": "ACCO",  # Accords d'entreprise - Accords collectifs d'entreprise
     }
 
     # Descriptions détaillées des fonds
     FONDS_DESCRIPTIONS = {
+        "ALL": {
+            "nom": "Tous les fonds",
+            "description": "Recherche transversale dans tous les fonds disponibles",
+            "contenu": "Ensemble de la base juridique Légifrance",
+        },
         "JORF": {
             "nom": "Journal Officiel de la République Française",
             "description": "Textes publiés au Journal Officiel : lois, décrets, arrêtés, avis, annonces...",
@@ -335,11 +340,6 @@ class LegiFranceSearchInput:
             "description": "Lois, Ordonnances, Décrets, Arrêtés recherchés par état juridique",
             "contenu": "Textes législatifs et réglementaires avec statut juridique",
         },
-        "ALL": {
-            "nom": "Tous les fonds",
-            "description": "Recherche transversale dans tous les fonds disponibles",
-            "contenu": "Ensemble de la base juridique Légifrance",
-        },
         "CIRC": {
             "nom": "Circulaires et instructions",
             "description": "Circulaires et instructions ministérielles",
@@ -367,7 +367,7 @@ class LegiFranceSearchInput:
             },
         }
 
-    def set_fond(self, fond: str) -> "LegiFranceSearchInput":
+    def set_fond(self, fond: str) -> "LegifranceQueryBuilder":
         """
         Définit le fonds de recherche.
 
@@ -395,14 +395,10 @@ class LegiFranceSearchInput:
                 - ACCO : Accords d'entreprise
 
         Returns:
-            LegiFranceSearchInput: Instance pour chaînage des méthodes
+            LegifranceQueryBuilder: Instance pour chaînage des méthodes
 
         Raises:
             ValueError: Si le fonds spécifié n'est pas valide
-
-        Example:
-            >>> search = LegiFranceSearchInput()
-            >>> search.set_fond("LODA_DATE")
         """
         if fond not in self.FONDS.values():
             raise ValueError(
@@ -411,9 +407,9 @@ class LegiFranceSearchInput:
         self.query["fond"] = fond
         return self
 
-    def add_champ(
+    def add_field(
         self, type_champ: str, criteres: List[Dict], operateur: str = "ET"
-    ) -> "LegiFranceSearchInput":
+    ) -> "LegifranceQueryBuilder":
         """
         Ajoute un champ de recherche (objet ChampDTO dans l'API Légifrance).
 
@@ -469,13 +465,13 @@ class LegiFranceSearchInput:
                 - "OU" : Au moins un critère doit être satisfait (OR logique)
 
         Returns:
-            LegiFranceSearchInput: Instance pour chaînage des méthodes
+            LegifranceQueryBuilder: Instance pour chaînage des méthodes
 
         Raises:
             ValueError: Si le type de champ spécifié n'est pas valide
 
         Example:
-            >>> search = LegiFranceSearchInput()
+            >>> search = LegifranceQueryBuilder()
             >>> critere1 = search.create_critere("mariage", "EXACTE")
             >>> critere2 = search.create_critere("divorce", "UN_DES_MOTS")
             >>> search.add_champ("TITLE", [critere1, critere2], "OU")
@@ -489,12 +485,12 @@ class LegiFranceSearchInput:
         self.query["recherche"]["champs"].append(champ)
         return self
 
-    def create_critere(
+    def create_criteria(
         self,
         valeur: str,
-        type_recherche: str = "UN_DES_MOTS",
+        type_recherche: str = "TOUS_LES_MOTS_DANS_UN_CHAMP",
         operateur: str = "ET",
-        proximite: Optional[int] = None,
+        proximite: Optional[int] = None, # Nombre maximum de mots entre les termes recherchés,
         criteres: Optional[List[Dict]] = None,
     ) -> Dict:
         """
@@ -553,7 +549,7 @@ class LegiFranceSearchInput:
 
         Examples:
             >>> # Recherche simple d'un mot
-            >>> search = LegiFranceSearchInput()
+            >>> search = LegifranceQueryBuilder()
             >>> critere = search.create_critere("mariage", "EXACTE")
 
             >>> # Recherche avec proximité
@@ -589,7 +585,7 @@ class LegiFranceSearchInput:
 
         return critere
 
-    def add_filtre_valeurs(self, facette: str, valeurs: List[str]) -> "LegiFranceSearchInput":
+    def add_filtre(self, facette: str, valeurs: List[str]) -> "LegifranceQueryBuilder":
         """
         Ajoute un filtre par valeurs (objet FiltreDTO dans l'API Légifrance).
 
@@ -690,7 +686,7 @@ class LegiFranceSearchInput:
                 Utilisez les valeurs retournées par l'API dans les facettes de réponse.
 
         Returns:
-            LegiFranceSearchInput: Instance pour chaînage des méthodes
+            LegifranceQueryBuilder: Instance pour chaînage des méthodes
 
         Note:
             - Plusieurs filtres peuvent être ajoutés. Ils seront combinés avec un opérateur ET.
@@ -699,7 +695,7 @@ class LegiFranceSearchInput:
               et leurs valeurs possibles dans le contexte de votre fonds.
 
         Examples:
-            >>> search = LegiFranceSearchInput()
+            >>> search = LegifranceQueryBuilder()
             >>> # Filtrer par nature de texte (JORF, LODA)
             >>> search.add_filtre_valeurs("NATURE", ["LOI", "ORDONNANCE", "ARRETE"])
             >>>
@@ -719,183 +715,86 @@ class LegiFranceSearchInput:
         self.query["recherche"]["filtres"].append(filtre)
         return self
 
-    def add_filtre_dates(
-        self, facette: str, start_date: str, end_date: str
-    ) -> "LegiFranceSearchInput":
+    def add_dates(
+        self, start_date: str, end_date: Optional[str] = None
+    ) -> "LegifranceQueryBuilder":
         """
         Ajoute un filtre par période de dates (objet FiltreDTO avec DatePeriod dans l'API Légifrance).
 
         Permet de filtrer les résultats sur une plage de dates définie.
 
+        Attention : fond doit etre défini avant d'utiliser cette méthode.
+
         Args:
-            facette (str): Nom de la facette de date => nom du filtre.
+           
+        # La date de recherche est spécifique au fond
+        # Une facette principale est généralement admise pour les fonds qui supportent le filtrage
+        # La liste est le résultat d'un scan exhaustif des fonds et facettes.
+        # JORF : DATE_PUBLICATION
+        # LODA_DATE : DATE_PUBLICATION
+        # LODA_ETAT : DATE_PUBLICATION
+        # JURI : DATE_DECISION
+        # CETAT : DATE_DECISION
+        # JUFI : DATE_DECISION
+        # CONSTIT : DATE_DECISION
+        # KALI : DATE_SIGNATURE
+        # CIRC : DATE_SIGNATURE
+        # ACCO : DATE_SIGNATURE
 
-                ⚠️ IMPORTANT: Les filtres de dates ne sont PAS supportés par tous les fonds!
-                Les fonds CODE_DATE et CODE_ETAT ne supportent PAS les filtres de dates.
-
-                **FACETTES DE DATES PRINCIPALES:**
-
-                - **DATE_SIGNATURE** : Date de signature du texte
-                  Applicable aux fonds: JORF, LODA_DATE, LODA_ETAT, CIRC
-                  ❌ NON applicable à: CODE_DATE, CODE_ETAT
-
-                - **DATE_PUBLICATION** (ou DATE_PUBLI) : Date de publication officielle
-                  Applicable aux fonds: JORF, LODA_DATE, LODA_ETAT, CIRC, KALI
-                  ❌ NON applicable à: CODE_DATE, CODE_ETAT
-
-                - **DATE_VERSION** : Date de version du texte consolidé
-                  Applicable aux fonds: LODA_DATE (recherche par date)
-                  ❌ NON applicable à: CODE_DATE, CODE_ETAT
-
-                - **DATE_PARUTION** : Date de parution au Journal Officiel
-                  Applicable au fonds: JORF
-                  ❌ NON applicable à: CODE_DATE, CODE_ETAT
-
-                - **DATE_DECISION** : Date de la décision judiciaire
-                  Applicable aux fonds: CETAT, JURI, JUFI, CONSTIT
-
-                - **DATE_ARRET** : Date de l'arrêt
-                  Applicable aux fonds: JURI, CETAT
-
-                - **DATE_CREATION** : Date de création du document
-                  Applicable aux fonds: ACCO, CIRC
-
-                - **DATE_MODIFICATION** (ou DATE_UPDATE, lastUpdate) : Date de dernière modification
-                  Applicable à plusieurs fonds pour le suivi des mises à jour
-
-                - **DATE_EFFET** : Date d'entrée en vigueur/effet
-                  Applicable aux fonds: ACCO, KALI
-
-                - **DATE_ABROGATION** : Date d'abrogation du texte
-                  Applicable aux fonds: LODA_DATE, LODA_ETAT
-                  ❌ NON applicable à: CODE_DATE, CODE_ETAT
-
-                - **DATE_DEPOT** : Date de dépôt (pour accords d'entreprise)
-                  Applicable au fonds: ACCO
-
-                - **DATE_EXPORT** : Date d'export du document
-                  Applicable au fonds: CIRC
-
-                - **DATE_OPPOSABILITE** : Date de déclaration d'opposabilité
-                  Applicable au fonds: CIRC
-
-                - **DATE_DELIBERATION** : Date de délibération
-                  Applicable au fonds: CNIL
+        ⚠️ Pour tous les autres fonds, le filtrage par date est ignoré.
 
             start_date (str): Date de début de la période.
                 Format: "YYYY-MM-DD" (ex: "2015-01-01")
                 Le format ISO 8601 est requis.
 
-            end_date (str): Date de fin de la période.
+            end_date (str, optional): Date de fin de la période. optionnel
                 Format: "YYYY-MM-DD" (ex: "2018-01-31")
                 Le format ISO 8601 est requis.
-
+               
         Returns:
-            LegiFranceSearchInput: Instance pour chaînage des méthodes
+            LegifranceQueryBuilder: Instance pour chaînage des méthodes
 
-        Examples:
-            >>> search = LegiFranceSearchInput()
-            >>> # Filtrer les textes signés entre le 1er janvier 2015 et le 31 janvier 2018
-            >>> search.add_filtre_dates("DATE_SIGNATURE", "2015-01-01", "2018-01-31")
-            >>> # Filtrer les textes publiés en 2020
-            >>> search.add_filtre_dates("DATE_PUBLICATION", "2020-01-01", "2020-12-31")
         """
-        filtre = {"facette": facette, "dates": {"start": start_date, "end": end_date}}
+        # La date de recherche est spécifique au fond
+        # Une facette principale est généralement admise pour les fonds qui supportent le filtrage
+        # La liste est le résultat d'un scan exhaustif des fonds et facettes.
+        fond = self.query.get("fond", "")
+        if fond in ["JORF", "LODA_DATE", "LODA_ETAT"]:
+            facette_principale = "DATE_PUBLICATION"
+        elif fond in ["CETAT", "JURI", "JUFI", "CONSTIT"]:
+            facette_principale = "DATE_DECISION"
+        elif fond in ["KALI", "CIRC", "ACCO"]:
+            facette_principale = "DATE_SIGNATURE"
+        else:
+            # No filtering on dates
+            return self  
+
+        # Apply date filter
+        if end_date is not None:
+            # Comportement normal avec start et end
+            filtre = {"facette": facette_principale, "dates": {"start": start_date, "end": end_date}}
+        else:
+            # Seulement start (comportement par défaut pour ALL ou si end_date n'est pas fourni)
+            filtre = {"facette": facette_principale, "dates": {"start": start_date}}
+
         self.query["recherche"]["filtres"].append(filtre)
         return self
 
-    def add_filtre_date_unique(self, facette: str, date: str) -> "LegiFranceSearchInput":
-        """
-        Ajoute un filtre par date unique (objet FiltreDTO dans l'API Légifrance).
-
-        Permet de filtrer les résultats sur une date précise.
-
-        Args:
-            facette (str): Nom de la facette de date => nom du filtre.
-
-                ⚠️ IMPORTANT: Les filtres de dates ne sont PAS supportés par tous les fonds!
-                Les fonds CODE_DATE et CODE_ETAT ne supportent PAS les filtres de dates.
-
-                **FACETTES DE DATES PRINCIPALES:**
-
-                - **DATE_SIGNATURE** : Date de signature du texte
-                  Applicable aux fonds: JORF, LODA_DATE, LODA_ETAT, CIRC
-                  ❌ NON applicable à: CODE_DATE, CODE_ETAT
-
-                - **DATE_PUBLICATION** (ou DATE_PUBLI) : Date de publication officielle
-                  Applicable aux fonds: JORF, LODA_DATE, LODA_ETAT, CIRC, KALI
-                  ❌ NON applicable à: CODE_DATE, CODE_ETAT
-
-                - **DATE_VERSION** : Date de version du texte consolidé
-                  Applicable aux fonds: LODA_DATE (recherche par date)
-                  ❌ NON applicable à: CODE_DATE, CODE_ETAT
-
-                - **DATE_PARUTION** : Date de parution au Journal Officiel
-                  Applicable au fonds: JORF
-                  ❌ NON applicable à: CODE_DATE, CODE_ETAT
-
-                - **DATE_DECISION** : Date de la décision judiciaire
-                  Applicable aux fonds: CETAT, JURI, JUFI, CONSTIT
-
-                - **DATE_ARRET** : Date de l'arrêt
-                  Applicable aux fonds: JURI, CETAT
-
-                - **DATE_CREATION** : Date de création du document
-                  Applicable aux fonds: ACCO, CIRC
-
-                - **DATE_MODIFICATION** (ou DATE_UPDATE, lastUpdate) : Date de dernière modification
-                  Applicable à plusieurs fonds pour le suivi des mises à jour
-
-                - **DATE_EFFET** : Date d'entrée en vigueur/effet
-                  Applicable aux fonds: ACCO, KALI
-
-                - **DATE_ABROGATION** : Date d'abrogation du texte
-                  Applicable aux fonds: LODA_DATE, LODA_ETAT
-                  ❌ NON applicable à: CODE_DATE, CODE_ETAT
-
-                - **DATE_DEPOT** : Date de dépôt (pour accords d'entreprise)
-                  Applicable au fonds: ACCO
-
-                - **DATE_EXPORT** : Date d'export du document
-                  Applicable au fonds: CIRC
-
-                - **DATE_OPPOSABILITE** : Date de déclaration d'opposabilité
-                  Applicable au fonds: CIRC
-
-                - **DATE_DELIBERATION** : Date de délibération
-                  Applicable au fonds: CNIL
-
-            date (str): Date unique pour le filtre.
-                Format: "YYYY-MM-DD" (ex: "2016-01-01")
-                Le format ISO 8601 est requis.
-                Le format datetime complet ISO 8601 est également accepté (ex: "2016-01-01T00:00:00").
-
-        Returns:
-            LegiFranceSearchInput: Instance pour chaînage des méthodes
-
-        Examples:
-            >>> search = LegiFranceSearchInput()
-            >>> # Filtrer les textes signés le 1er janvier 2016
-            >>> search.add_filtre_date_unique("DATE_SIGNATURE", "2016-01-01")
-        """
-        filtre = {"facette": facette, "singleDate": date}
-        self.query["recherche"]["filtres"].append(filtre)
-        return self
 
     def set_pagination(
-        self, page_number: int = 1, page_size: int = 10, type_pagination: str = "DEFAUT"
-    ) -> "LegiFranceSearchInput":
+        self, page_number: int = 0, page_size: int = 10, type_pagination: str = "DEFAUT"
+    ) -> "LegifranceQueryBuilder":
         """
         Configure la pagination des résultats (selon RechercheSpecifiqueDTO de l'API Légifrance).
 
         Args:
             page_number (int, optional): Numéro de la page à consulter.
-                Défaut: 1 (première page)
-                La numérotation commence à 1.
+                Défaut: 0(première page)
+         
 
             page_size (int, optional): Nombre d'éléments par page.
                 Défaut: 10
-                Maximum: 100 (la valeur sera automatiquement limitée à 100 si dépassée)
+                Maximum: 50 (la valeur sera automatiquement limitée à 50 si dépassée)
 
             type_pagination (str, optional): Type de pagination.
                 Défaut: "DEFAUT"
@@ -909,21 +808,21 @@ class LegiFranceSearchInput:
                 la valeur reçue dans la réponse précédente.
 
         Returns:
-            LegiFranceSearchInput: Instance pour chaînage des méthodes
+            LegifranceQueryBuilder: Instance pour chaînage des méthodes
 
         Examples:
-            >>> search = LegiFranceSearchInput()
+            >>> search = LegifranceQueryBuilder()
             >>> # Pagination standard : 50 résultats par page, page 1
             >>> search.set_pagination(page_number=1, page_size=50)
             >>> # Aller à la page 3 avec 25 résultats par page
             >>> search.set_pagination(page_number=3, page_size=25)
         """
         self.query["recherche"]["pageNumber"] = page_number
-        self.query["recherche"]["pageSize"] = min(page_size, 100)  # Max 100
+        self.query["recherche"]["pageSize"] = min(page_size, 50)  # Max 50
         self.query["recherche"]["typePagination"] = type_pagination
         return self
 
-    def set_operateur_global(self, operateur: str) -> "LegiFranceSearchInput":
+    def set_operator(self, operator: str) -> "LegifranceQueryBuilder":
         """
         Définit l'opérateur global entre les champs de recherche (selon RechercheSpecifiqueDTO de l'API).
 
@@ -942,24 +841,24 @@ class LegiFranceSearchInput:
                          les documents contenant l'un ou l'autre (ou les deux) seront retournés.
 
         Returns:
-            LegiFranceSearchInput: Instance pour chaînage des méthodes
+            LegifranceQueryBuilder: Instance pour chaînage des méthodes
 
         Raises:
             ValueError: Si l'opérateur n'est pas "ET" ou "OU"
 
         Examples:
-            >>> search = LegiFranceSearchInput()
+            >>> search = LegifranceQueryBuilder()
             >>> # Les documents doivent correspondre à TOUS les champs
             >>> search.set_operateur_global("ET")
             >>> # Les documents doivent correspondre à AU MOINS UN champ
             >>> search.set_operateur_global("OU")
         """
-        if operateur not in ["ET", "OU"]:
+        if operator not in ["ET", "OU"]:
             raise ValueError("L'opérateur doit être 'ET' ou 'OU'")
-        self.query["recherche"]["operateur"] = operateur
+        self.query["recherche"]["operateur"] = operator
         return self
 
-    def set_sort(self, sort: str, second_sort: Optional[str] = None) -> "LegiFranceSearchInput":
+    def set_sort(self, sort: str, second_sort: Optional[str] = None) -> "LegifranceQueryBuilder":
         """
         Configure le tri des résultats (selon RechercheSpecifiqueDTO de l'API Légifrance).
 
@@ -993,10 +892,10 @@ class LegiFranceSearchInput:
                 - "DATE_ASC" : Par date croissante
 
         Returns:
-            LegiFranceSearchInput: Instance pour chaînage des méthodes
+            LegifranceQueryBuilder: Instance pour chaînage des méthodes
 
         Examples:
-            >>> search = LegiFranceSearchInput()
+            >>> search = LegifranceQueryBuilder()
             >>> # Tri par pertinence uniquement
             >>> search.set_sort("PERTINENCE")
             >>> # Tri par date de signature décroissante, puis par ID
@@ -1009,7 +908,7 @@ class LegiFranceSearchInput:
             self.query["recherche"]["secondSort"] = second_sort
         return self
 
-    def set_advanced_search(self, advanced: bool = True) -> "LegiFranceSearchInput":
+    def set_advanced_search(self, advanced: bool = True) -> "LegifranceQueryBuilder":
         """
         Active ou désactive le mode de recherche avancée (selon RechercheSpecifiqueDTO de l'API).
 
@@ -1024,10 +923,10 @@ class LegiFranceSearchInput:
                 - False : Mode recherche simple
 
         Returns:
-            LegiFranceSearchInput: Instance pour chaînage des méthodes
+            LegifranceQueryBuilder: Instance pour chaînage des méthodes
 
         Examples:
-            >>> search = LegiFranceSearchInput()
+            >>> search = LegifranceQueryBuilder()
             >>> # Activer la recherche avancée
             >>> search.set_advanced_search(True)
             >>> # Désactiver la recherche avancée (recherche simple)
@@ -1067,7 +966,7 @@ class LegiFranceSearchInput:
             ValueError: Si le fonds n'a pas été défini avec set_fond()
 
         Examples:
-            >>> search = LegiFranceSearchInput()
+            >>> search = LegifranceQueryBuilder()
             >>> search.set_fond("LODA_DATE")
             >>> critere = search.create_critere("mariage", "EXACTE")
             >>> search.add_champ("TITLE", [critere])
@@ -1098,7 +997,7 @@ class LegiFranceSearchInput:
             ValueError: Si le fonds n'a pas été défini (propagé depuis build())
 
         Examples:
-            >>> search = LegiFranceSearchInput()
+            >>> search = LegifranceQueryBuilder()
             >>> search.set_fond("LODA_DATE")
             >>> critere = search.create_critere("mariage", "EXACTE")
             >>> search.add_champ("TITLE", [critere])
@@ -1113,7 +1012,7 @@ class LegiFranceSearchInput:
         """
         return json.dumps(self.build(), indent=indent, ensure_ascii=False)
 
-    def reset(self) -> "LegiFranceSearchInput":
+    def reset(self) -> "LegifranceQueryBuilder":
         """
         Remet à zéro le générateur de requêtes.
 
@@ -1121,10 +1020,10 @@ class LegiFranceSearchInput:
         Utile pour réutiliser le même objet pour construire une nouvelle requête.
 
         Returns:
-            LegiFranceSearchInput: Instance réinitialisée pour chaînage des méthodes
+            LegifranceQueryBuilder: Instance réinitialisée pour chaînage des méthodes
 
         Examples:
-            >>> search = LegiFranceSearchInput()
+            >>> search = LegifranceQueryBuilder()
             >>> search.set_fond("LODA_DATE")
             >>> # ... construire une requête ...
             >>> search.reset()  # Réinitialise tout

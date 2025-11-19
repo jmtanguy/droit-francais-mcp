@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-🏛️ Serveur MCP de requête aux API publics LégiFrance et JudiLibre
+🏛️ Serveur MCP de requête aux API publiques Légifrance et Judilibre
 
 Copyright (c) 2025 Jean-Michel Tanguy
 Licensed under the MIT License (see LICENSE file)
@@ -13,13 +13,12 @@ Remarques :
 
 import logging
 import sys
-from typing import Any, Dict, List, Optional
-
+from typing import Any, Dict, List, Optional, Union
 from fastmcp import FastMCP
 
 from __version__ import __author__, __description__, __version__
-from api_judilibre import JudiLibreAPI
-from api_legifrance import LegiFranceAPI
+from api_judilibre import JudilibreAPI
+from api_legifrance import LegifranceAPI
 
 # ============================================================================
 # CONFIGURATION ET INITIALISATION
@@ -31,38 +30,172 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     handlers=[
         logging.StreamHandler(sys.stderr),  # Envoi vers stderr pour MCP
-        # logging.FileHandler('droit_francais_mcp.log')  # Fichier de log
     ],
 )
 logger = logging.getLogger(__name__)
 
 # Initialisation de FastMCP
 try:
-    mcp = FastMCP(f"FR Légifrance et JudiLibre MCP Server v{__version__} - Droit Français Officiel")
-    logger.debug(f"ÉTAPE 1: Serveur MCP v{__version__} initialisé avec succès")
-    logger.info(f"Version: {__version__} | Auteur: {__author__}")
+    mcp = FastMCP(f"FR Légifrance et Judilibre MCP Server v{__version__} - Droit Français Officiel")
 except Exception as e:
     logger.error(f"ERREUR ÉTAPE 1: Échec de l'initialisation du serveur MCP: {e}")
     raise
 
 # Initialisation de l'API LegiFrance
 try:
-    legifranceapi = LegiFranceAPI(sandbox=False)
-    logger.info("LégiFrance API initialisée avec succès (mode sandbox)")
-    logger.debug("ÉTAPE 2: API LegiFrance initialisée avec succès")
+    legifranceapi = LegifranceAPI(sandbox=False)
 except Exception as e:
     logger.error(f"Erreur lors de l'initialisation de l'API LegiFrance: {e}")
-    logger.warning(f"ÉTAPE 2: API LegiFrance en échec: {e}")
     legifranceapi = None
 
-# Initialisation de l'API JudiLibre
+# Initialisation de l'API Judilibre
 try:
-    judilibreapi = JudiLibreAPI(sandbox=False)
-    logger.info("JudiLibre API initialisée avec succès (mode sandbox)")
+    judilibreapi = JudilibreAPI(sandbox=False)
 except Exception as e:
-    logger.error(f"Erreur lors de l'initialisation de l'API JudiLibre: {e}")
-    logger.warning(f"API JudiLibre en échec: {e}")
+    logger.error(f"Erreur lors de l'initialisation de l'API Judilibre: {e}")
     judilibreapi = None
+
+
+# ============================================================================
+# RESOURCES - DOCUMENTATION DÉTAILLÉE
+# ============================================================================
+
+
+@mcp.resource("legifrance://documentation/fonds")
+def documentation_fonds_legifrance() -> str:
+    """Fonds de recherche Légifrance disponibles."""
+    return """
+# FONDS LÉGIFRANCE
+
+**ALL** (défaut): Tous les fonds | **CODE_ETAT/CODE_DATE**: Codes consolidés | **LODA_ETAT/LODA_DATE**: Lois, Ordonnances, Décrets, Arrêtés | **JORF**: Journal Officiel | **JURI**: Jurisprudence judiciaire | **CETAT**: Conseil d'État | **JUFI**: Cour des comptes | **CONSTIT**: Conseil Constitutionnel | **KALI**: Conventions collectives | **ACCO**: Accords d'entreprise | **CIRC**: Circulaires | **CNIL**: CNIL
+"""
+
+
+@mcp.resource("legifrance://documentation/champs")
+def documentation_champs_legifrance() -> str:
+    """Types de champs de recherche Légifrance."""
+    return """
+# CHAMPS DE RECHERCHE
+
+**ALL** (défaut): Tous les champs | **TITLE**: Titre | **ARTICLE**: Contenu articles | **TEXTE**: Texte complet | **NUM_ARTICLE**: N° article | **NOR**: N° ordre réglementaire | **NUM**: N° texte | **RESUMES**: Résumés jurisprudence | **MINISTERE**: Ministère | **IDCC**: Convention collective | **MOTS_CLES**: Mots-clés
+"""
+
+
+@mcp.resource("legifrance://documentation/types-recherche")
+def documentation_types_recherche_legifrance() -> str:
+    """Types de recherche Légifrance."""
+    return """
+# TYPES DE RECHERCHE
+
+**EXACTE** (défaut, recommandé): Expression exacte | **TOUS_LES_MOTS_DANS_UN_CHAMP**: Tous les mots présents (ET) | **UN_DES_MOTS**: Au moins un mot (OU) | **AUCUN_DES_MOTS**: Exclusion de mots | **AUCUNE_CORRESPONDANCE_A_CETTE_EXPRESSION**: Exclusion expression exacte
+"""
+
+
+@mcp.resource("legifrance://documentation/options-tri")
+def documentation_options_tri_legifrance() -> str:
+    """Options de tri Légifrance."""
+    return """
+# TRI DES RÉSULTATS
+
+**PERTINENCE** (recommandé): Score de pertinence | **SIGNATURE_DATE_DESC**: Date signature récente→ancienne | **SIGNATURE_DATE_ASC**: Date signature ancienne→récente | **DATE_PUBLI_DESC**: Date publication récente→ancienne | **DATE_PUBLI_ASC**: Date publication ancienne→récente
+"""
+
+
+
+@mcp.resource("legifrance://documentation/filtres-dates")
+def documentation_filtres_dates_legifrance() -> str:
+    """Filtres de dates Légifrance."""
+    return """
+# FILTRES DE DATES
+
+Format: YYYY-MM-DD (date_debut obligatoire, date_fin optionnel)
+
+⚠️ **FONDS COMPATIBLES**: JORF, LODA_DATE, LODA_ETAT (DATE_PUBLICATION) | JURI, CETAT, JUFI, CONSTIT (DATE_DECISION) | KALI, CIRC, ACCO (DATE_SIGNATURE)
+
+❌ **INCOMPATIBLES**: ALL, CODE_DATE, CODE_ETAT, CNIL (filtres ignorés avec avertissement)
+
+Note: DATE_PUBLICATION ≠ DATE_DECISION ≠ DATE_SIGNATURE. Pour jurisprudence: date de décision, pas de mise en ligne.
+"""
+
+
+
+@mcp.resource("judilibre://documentation/juridictions")
+def documentation_juridictions_judilibre() -> str:
+    """Juridictions Judilibre."""
+    return """
+# JURIDICTIONS
+
+**cc**: Cour de cassation | **ca**: Cours d'appel | **tj**: Tribunaux judiciaires | **tcom**: Tribunaux de commerce 
+"""
+
+
+@mcp.resource("judilibre://documentation/chambres")
+def documentation_chambres_judilibre() -> str:
+    """Chambres Cour de cassation."""
+    return """
+# CHAMBRES (Cour de cassation)
+
+**pl**: Assemblée plénière | **mi**: Chambre mixte | **civ1**: 1ère civ. | **civ2**: 2e civ. | **civ3**: 3e civ. | **comm**: Commerciale | **soc**: Sociale | **cr**: Criminelle | **creun**: Chambres réunies | **ordo**: Ordonnance | **allciv**: Toutes civ. | **other**: Autre
+
+Note: Claude convertit automatiquement les noms complets en codes.
+"""
+
+
+@mcp.resource("judilibre://documentation/solutions")
+def documentation_solutions_judilibre() -> str:
+    """Solutions des décisions."""
+    return """
+# SOLUTIONS
+
+**cassation**: Cassation | **cassation_partielle**: Cassation partielle | **rejet**: Rejet | **annulation**: Annulation | **irrecevabilite**: Irrecevabilité | **desistement**: Désistement | **non-lieu**: Non-lieu | **qpc**: QPC
+"""
+
+
+@mcp.resource("judilibre://documentation/localisations")
+def documentation_localisations_judilibre() -> str:
+    """Localisations (sièges de juridictions)."""
+    return """
+# LOCALISATIONS
+
+**Cours d'appel**: ca_<ville> (ex: ca_paris, ca_lyon) | **Tribunaux judiciaires**: tj<INSEE> (ex: tj75101=Paris, tj69123=Lyon) | **Tribunaux commerce**: tcom<INSEE>
+
+Utiliser `obtenir_taxonomie_judilibre(taxonomy_id="location", context_value="ca|tj|tcom")` pour liste complète. Claude convertit automatiquement les noms de villes.
+"""
+
+
+@mcp.resource("judilibre://documentation/types-decision")
+def documentation_types_decision_judilibre() -> str:
+    """Types de décision."""
+    return """
+# TYPES DE DÉCISION
+
+**arret**: Juridictions collégiales (cc, ca, ce, caa, crc) | **ordonnance**: Juge unique, référés, toutes juridictions | **qpc**: QPC (cc, ce uniquement) | **saisie**: Saisies (tj uniquement)
+"""
+
+
+@mcp.resource("judilibre://documentation/themes")
+def documentation_themes_judilibre() -> str:
+    """Thèmes juridiques."""
+    return """
+# THÈMES (Matières juridiques)
+
+Liste longue (centaines). Catégories: **Civil** (responsabilité, contrats, famille, successions) | **Commercial** (sociétés, concurrence, PI, proc. collectives) | **Travail** (licenciement, salaires, sécurité sociale) | **Pénal** (infractions, procédure, peines) | **Admin** (fonction publique, urbanisme) | **Fiscal** (IR, TVA, IS)
+
+Utiliser `obtenir_taxonomie_judilibre(taxonomy_id="theme")` pour codes exacts. Explorer sans filtre puis affiner.
+"""
+
+
+@mcp.resource("judilibre://documentation/options-tri")
+def documentation_options_tri_judilibre() -> str:
+    """Options de tri Judilibre."""
+    return """
+# TRI
+
+**scorepub** (défaut, recommandé): Pertinence + publication (Bulletin>Rapport>Lettre>Communiqué>Non publié) | **score**: Pertinence seule | **date**: Date décision
+
+**Ordre**: desc (défaut, récent→ancien) | asc (ancien→récent)
+"""
+
 
 
 # ============================================================================
@@ -71,374 +204,127 @@ except Exception as e:
 
 
 @mcp.tool
-def rechercher_droit_francais(
-    query: str,
-    fond: str = "CODE_ETAT",
+def rechercher_legifrance(
+    recherche: str,
+    fond: str = "ALL",
     type_champ: str = "ALL",
-    type_recherche: str = "UN_DES_MOTS",
-    code_name: Optional[str] = None,
-    filtres_valeurs: Optional[Dict[str, List[str]]] = None,
-    filtres_dates: Optional[Dict[str, Dict[str, str]]] = None,
-    page_number: int = 1,
-    page_size: int = 10,
-    sort: Optional[str] = None,
+    type_recherche: str = "TOUS_LES_MOTS_DANS_UN_CHAMP",
+    code: Optional[str] = None,
+    date_debut: Optional[str] = None,
+    date_fin: Optional[str] = None,
+    page: int = 0,
+    page_taille: int = 20,
+    tri: Optional[str] = "PERTINENCE",
     operateur: str = "ET",
-) -> List[Dict[str, Any]]:
+) -> Any:
     """
-    🇫🇷 RECHERCHE AVANCÉE OFFICIELLE dans la base juridique française Légifrance.
-
-    ⚠️ UTILISEZ CET OUTIL POUR TOUTE RECHERCHE AVANCÉE SUR LE DROIT FRANÇAIS ⚠️
+    Recherche avancée dans la base juridique Légifrance (codes, lois, jurisprudence, conventions).
 
     Args:
-        query (str): Terme(s) de recherche textuelle. OBLIGATOIRE.
-            Exemples: "mariage", "responsabilité civile", "divorce"
-
-        fond (str): Fonds de recherche. Défaut: "CODE_ETAT"
-            VALEURS POSSIBLES:
-            - "CODE_ETAT": Codes consolidés par état juridique [PAR DÉFAUT - RECOMMANDÉ POUR LES CODES]
-            - "CODE_DATE": Codes consolidés par date
-            - "LODA_ETAT": Lois, Ordonnances, Décrets, Arrêtés (par état)
-            - "LODA_DATE": Lois, Ordonnances, Décrets, Arrêtés (par date)
-            - "JORF": Journal Officiel de la République Française
-            - "JURI": Jurisprudence judiciaire (Cour de cassation, cours d'appel)
-            - "CETAT": Conseil d'État et juridictions administratives
-            - "JUFI": Jurisprudence financière (Cour des comptes)
-            - "CONSTIT": Conseil Constitutionnel
-            - "KALI": Conventions collectives
-            - "CIRC": Circulaires et instructions ministérielles
-            - "ACCO": Accords d'entreprise
-            - "CNIL": Commission Nationale de l'Informatique et des Libertés
-            - "ALL": Tous les fonds (recherche transversale)
-
-        type_champ (str): Type de champ où rechercher. Défaut: "ALL"
-            VALEURS POSSIBLES:
-            - "ALL": Tous les champs [PAR DÉFAUT]
-            - "TITLE": Titre du texte
-            - "ARTICLE": Contenu des articles
-            - "NUM_ARTICLE": Numéro d'article (ex: "Article 1240")
-            - "NOR": Numéro d'ordre réglementaire
-            - "NUM": Numéro du texte (ex: "Loi n°2018-287")
-            - "TEXTE": Contenu textuel complet
-            - "RESUMES": Résumés (pour jurisprudence)
-            - "MINISTERE": Ministère émetteur
-            - "IDCC": Identifiant de convention collective
-            - "MOTS_CLES": Mots-clés thématiques
-
-        type_recherche (str): Type de recherche. Défaut: "UN_DES_MOTS"
-            VALEURS POSSIBLES:
-            - "UN_DES_MOTS": Au moins un des mots [PAR DÉFAUT]
-            - "EXACTE": Expression exacte
-            - "TOUS_LES_MOTS_DANS_UN_CHAMP": Tous les mots présents
-            - "AUCUN_DES_MOTS": Aucun des mots (exclusion)
-            - "AUCUNE_CORRESPONDANCE_A_CETTE_EXPRESSION": Expression absente (exclusion)
-
-        code_name (str, optional): Nom du code à rechercher (uniquement pour fonds CODE_DATE/CODE_ETAT).
-            EXEMPLES: "Code civil", "Code pénal", "Code du travail", "Code de commerce"
-
-        filtres_valeurs (Dict[str, List[str]], optional): Filtres par valeurs textuelles.
-            Format: {"facette": ["valeur1", "valeur2"]}
-            EXEMPLES COURANTS:
-            - {"NATURE": ["LOI", "ORDONNANCE", "DECRET"]}
-            - {"ETAT_JURIDIQUE": ["VIGUEUR"]}
-            - {"JURIDICTION_NATURE": ["COUR_CASSATION", "TRIBUNAL_ADMINISTRATIF"]}
-            - {"IDCC": ["1880", "2120"]}
-            - {"MINISTERE": ["Ministère de la Justice"]}
-
-        filtres_dates (Dict[str, Dict[str, str]], optional): Filtres par périodes de dates.
-            Format: {"facette": {"start": "YYYY-MM-DD", "end": "YYYY-MM-DD"}}
-
-            ⚠️ IMPORTANT: Les filtres de dates ne sont PAS supportés par tous les fonds!
-
-            **FONDS SUPPORTANT LES FILTRES DE DATES:**
-            - JORF: DATE_SIGNATURE, DATE_PUBLICATION, DATE_PARUTION
-            - LODA_DATE, LODA_ETAT: DATE_SIGNATURE, DATE_PUBLICATION, DATE_VERSION
-            - JURI, CETAT, JUFI: DATE_DECISION, DATE_ARRET
-            - CONSTIT: DATE_DECISION
-            - KALI: DATE_PUBLICATION, DATE_EFFET
-            - CIRC: DATE_SIGNATURE, DATE_CREATION, DATE_EXPORT
-            - ACCO: DATE_CREATION, DATE_EFFET, DATE_DEPOT
-            - CNIL: DATE_DELIBERATION
-
-            **FONDS NE SUPPORTANT PAS LES FILTRES DE DATES:**
-            - CODE_DATE, CODE_ETAT: ❌ NE PAS utiliser de filtres de dates!
-              → Utilisez uniquement les filtres de valeurs (ETAT_JURIDIQUE, TEXT_NOM_CODE)
-
-            EXEMPLES D'USAGE CORRECT:
-            - {"DATE_SIGNATURE": {"start": "2020-01-01", "end": "2023-12-31"}}  # Pour JORF, LODA
-            - {"DATE_PUBLICATION": {"start": "2022-01-01", "end": "2022-12-31"}}  # Pour JORF, LODA, KALI
-            - {"DATE_DECISION": {"start": "2021-01-01", "end": "2024-12-31"}}  # Pour JURI, CETAT
-
-            ❌ ERREUR: Ne pas utiliser filtres_dates avec fond="CODE_ETAT" ou "CODE_DATE"
-            ✅ CORRECT: Utiliser filtres_valeurs={"ETAT_JURIDIQUE": ["VIGUEUR"]} avec CODE_ETAT
-
-        page_number (int): Numéro de la page. Défaut: 1
-
-        page_size (int): Nombre de résultats par page (max 100). Défaut: 10
-
-        sort (str, optional): Ordre de tri des résultats.
-            VALEURS POSSIBLES:
-            - "PERTINENCE": Tri par pertinence [RECOMMANDÉ]
-            - "SIGNATURE_DATE_DESC": Date de signature décroissante
-            - "SIGNATURE_DATE_ASC": Date de signature croissante
-            - "DATE_PUBLI_DESC": Date de publication décroissante
-            - "DATE_PUBLI_ASC": Date de publication croissante
-
-        operateur (str): Opérateur entre les champs. Défaut: "ET"
-            VALEURS POSSIBLES:
-            - "ET": Tous les critères doivent correspondre [PAR DÉFAUT]
-            - "OU": Au moins un critère doit correspondre
+        recherche: Terme(s) de recherche. Ex: "mariage", "responsabilité civile"
+        fond: Fonds (ALL, CODE_ETAT, LODA_ETAT, JORF, JURI, KALI, etc.). Défaut: "ALL"
+        type_champ: Champ de recherche (ALL, TITLE, ARTICLE, etc.). Défaut: "ALL"
+        type_recherche: Type de recherche : EXACTE, TOUS_LES_MOTS_DANS_UN_CHAMP, UN_DES_MOTS, AUCUN_DES_MOTS. Défaut: "TOUS_LES_MOTS_DANS_UN_CHAMP"
+        code: Nom du code (ex: "Code civil") pour fonds CODE_ETAT/CODE_DATE. Défaut : None
+        date_debut: Date de début pour filtres dates (YYYY-MM-DD) avec les fonds: JORF, LODA_DATE, LODA_ETAT, JURI, CETAT, JUFI, CONSTIT, KALI, CIRC, ACCO. Défaut : None
+        date_fin: Date de fin pour filtres dates (YYYY-MM-DD) avec les fonds: JORF, LODA_DATE, LODA_ETAT, JURI, CETAT, JUFI, CONSTIT, KALI, CIRC, ACCO : Défaut : None
+        page: Numéro de page. Défaut: 0
+        page_taille: Résultats par page (max 50). Défaut: 20
+        tri: Ordre de tri avec PERTINENCE, SIGNATURE_DATE_DESC, SIGNATURE_DATE_ASC, DATE_PUBLI_DESC, DATE_PUBLI_ASC Défaut: PERTINENCE
+        operateur: Opérateur entre champs (ET, OU). Défaut: "ET"
 
     Returns:
-        Liste des résultats avec métadonnées
+        Liste de résultats avec métadonnées. Utiliser l'outil consult_legifrance(id) pour le contenu complet.
 
-    Répondre factuellement en faisant un résumé des résultats trouvés et en indiquant les IDs des articles pertinents et en affichant le titre et le lien direct vers Légifrance.
-    ⚠️ ÉTAPE SUIVANTE OBLIGATOIRE: Utilisez obtenir_article(article_id) pour le contenu complet!
-
-    Examples:
-        # Recherche simple dans le Code civil
-        rechercher_droit_francais_etendue(
-            query="mariage",
-            fond="CODE_ETAT",
-            code_name="Code civil",
-            page_size=20
-        )
-
-        # Recherche de lois sur le divorce depuis 2020 (avec filtre de dates)
-        rechercher_droit_francais_etendue(
-            query="divorce",
-            fond="LODA_ETAT",  # LODA supporte les filtres de dates
-            type_recherche="EXACTE",
-            filtres_valeurs={"NATURE": ["LOI"]},
-            filtres_dates={"DATE_SIGNATURE": {"start": "2020-01-01", "end": "2024-12-31"}},
-            sort="SIGNATURE_DATE_DESC"
-        )
-
-        # Recherche dans les articles du Code pénal (CODE ne supporte PAS les filtres de dates)
-        rechercher_droit_francais_etendue(
-            query="vol",
-            fond="CODE_ETAT",  # CODE_ETAT ne supporte PAS les filtres de dates!
-            code_name="Code pénal",
-            type_champ="ARTICLE",
-            type_recherche="UN_DES_MOTS",
-            filtres_valeurs={"ETAT_JURIDIQUE": ["VIGUEUR"]}  # Utiliser filtres_valeurs uniquement
-        )
-
-        # Recherche jurisprudentielle à la Cour de cassation
-        rechercher_droit_francais_etendue(
-            query="responsabilité médicale",
-            fond="JURI",
-            type_champ="RESUMES",
-            filtres_valeurs={"JURIDICTION_NATURE": ["COUR_CASSATION"]},
-            page_size=30
-        )
-
-        # Recherche dans les conventions collectives
-        rechercher_droit_francais_etendue(
-            query="télétravail",
-            fond="KALI",
-            filtres_valeurs={"IDCC": ["1880"]},
-            page_size=15
-        )
+    Ressources utiles:
+        - legifrance://documentation/fonds - Liste des fonds disponibles
+        - legifrance://documentation/champs - Types de champs de recherche
+        - legifrance://documentation/types-recherche - Valeurs pour type_recherche
+        - legifrance://documentation/filtres-dates - Guide sur les filtres de dates
+        - legifrance://documentation/options-tri - Valeurs pour sort
     """
-    logger.debug(f"APPEL: rechercher_droit_francais_etendue(query='{query}', fond='{fond}')")
 
     try:
         # Validation des paramètres
-        if not query or not query.strip():
+        if not recherche or not recherche.strip():
             logger.error("Requête de recherche vide")
-            return []
-
-        if page_size < 1 or page_size > 100:
-            logger.error(f"Taille du nombre de résultats de recherche invalide: {page_size}")
             return []
 
         # Vérification de l'initialisation de l'API
         if legifranceapi is None:
-            logger.error("API LégiFrance non initialisée")
+            logger.error("API Légifrance non initialisée")
             return []
 
-        logger.info(f"Recherche: '{query}' dans {fond} (page_size: {page_size})")
+        # Validation des filtres de dates selon le fond
+        FONDS_WITH_DATE_FILTERS = ["JORF", "LODA_DATE", "LODA_ETAT", "JURI", "CETAT", "JUFI", "CONSTIT", "KALI", "CIRC", "ACCO"]
+
+        if (date_debut or date_fin) and fond not in FONDS_WITH_DATE_FILTERS:
+            warning = [
+                f"⚠️ ATTENTION: Les filtres de dates (date_debut/date_fin) sont ignorés pour le fond '{fond}'. "
+                f"Les filtres de dates ne fonctionnent que pour les fonds: {', '.join(FONDS_WITH_DATE_FILTERS)}"
+            ]
+            # Effacer les filtres de dates pour éviter toute confusion
+            date_debut = None
+            date_fin = None
+        else:
+            warning = None
+
         search_results = legifranceapi.search(
-            query=query,
+            query=recherche,
             fond=fond,
-            type_champ=type_champ,
-            type_recherche=type_recherche,
-            code_name=code_name,
-            filtres_valeurs=filtres_valeurs,
-            filtres_dates=filtres_dates,
-            page_number=page_number,
-            page_size=page_size,
-            sort=sort,
-            operateur=operateur,
+            field_type=type_champ,
+            search_type=type_recherche,
+            code=code,
+            date_start=date_debut,
+            date_end=date_fin,
+            page_number=page,
+            page_size=page_taille,
+            sort=tri,
+            operator=operateur,
         )
 
-        total_results = len(search_results)
-        logger.info(f"Résultats trouvés: {total_results}")
+        search_results = search_results or []
+        if warning:
+            search_results = {"warning": warning, "results": search_results}
 
-        return search_results or []
+        return search_results
 
     except Exception as e:
-        logger.error(f"Erreur lors de la recherche '{query}': {e}")
-        return []
+        logger.error(f"Erreur lors de la recherche '{recherche}': {e}")
+        return "Erreur lors de la recherche"
 
 
 @mcp.tool
-def obtenir_article(article_id: str) -> Dict[str, Any]:
+def consulter_legifrance(id: str) -> Any:
     """
-    🇫🇷 RÉCUPÉRATION OFFICIELLE du texte intégral d'un article juridique français depuis Légifrance.
+    Récupère le texte intégral d'un article juridique depuis Légifrance.
 
-    ⚠️ OUTIL OFFICIEL pour obtenir le contenu COMPLET des articles de droit français ⚠️
-
-    🔹 Cette fonction est LA DEUXIÈME ÉTAPE OBLIGATOIRE après TOUS les outils de recherche.
+    Cette fonction est la DEUXIÈME ÉTAPE après toute recherche pour obtenir le contenu complet.
 
     Args:
-        article_id (str): Identifiant de l'article obtenu depuis les résultats de recherche. OBLIGATOIRE.
-
-            FORMAT DES IDENTIFIANTS (détection automatique):
-            - "LEGIARTI..." : Articles de loi (Code civil, Code pénal, etc.)
-            - "LEGITEXT..." : Textes légaux consolidés complets
-            - "JURITEXT..." : Décisions de jurisprudence
-            - "CNILTEXT..." : Décisions CNIL
-            - "KALITEXT..." : Conventions collectives (textes)
-            - "KALIARTI..." : Conventions collectives (articles)
-            - "ACCOTEXT..." : Accords d'entreprise
-            - Autre format : Journal Officiel (par défaut)
-
-            💡 CONSEIL: Utilisez l'ID retourné dans le champ 'id' des résultats de recherche
+        id: ID de l'article (LEGIARTI..., LEGITEXT..., JURITEXT..., etc.)
+                   Obtenu depuis les résultats de recherche (metadata 'id')
 
     Returns:
-        Dict contenant le contenu juridique complet avec cette STRUCTURE DÉTAILLÉE:
-
-        📋 MÉTADONNÉES PRINCIPALES:
-        - **id**: Identifiant unique de l'article (LEGIARTI..., LEGITEXT..., etc.)
-        - **title** / **titre**: Titre de l'article ou du texte
-        - **nature**: Nature juridique (CODE, LOI, DECRET, ARRETE, etc.)
-        - **etat**: État juridique (VIGUEUR, ABROGE, MODIFIE, etc.)
-        - **dateDebut** / **dateVersion**: Date d'entrée en vigueur
-        - **dateFin**: Date d'abrogation (si applicable)
-
-        📄 CONTENU TEXTUEL:
-        - **texte** / **content** / **texteHtml**: Texte intégral de l'article
-        - **articles**: Liste des articles (pour les textes consolidés)
-        - **sections**: Structure hiérarchique par sections
-        - **nota**: Notes explicatives et observations
-        - **commentaire**: Commentaires juridiques
-
-        🔗 LIENS ET RÉFÉRENCES (TRÈS UTILES pour navigation):
-        - **liens**:
-          * **CITATION**: Articles cités dans ce texte
-          * **CONCORDANCE**: Articles en concordance
-          * **MODIFICATION**: Articles modifiés par ce texte
-          * **TXT_ASSOCIE**: Textes associés
-          → Chaque lien contient: id, titre, nature pour navigation facile
-
-        - **sommaire**: Structure hiérarchique du texte (permet navigation)
-        - **articleVersions**: Versions antérieures de l'article (historique)
-
-        📊 INFORMATIONS JURIDIQUES AVANCÉES:
-        - **num**: Numéro de l'article dans le texte
-        - **cid**: Identifiant CID (Container ID)
-        - **nor**: Numéro NOR (identification administrative)
-        - **dateSignature**: Date de signature du texte
-        - **datePubli**: Date de publication au JO
-        - **ministere**: Ministère émetteur
-        - **autorite**: Autorité signataire
-
-        🏛️ CONTEXTE HIÉRARCHIQUE:
-        - **path** / **context**: Chemin complet dans le code
-          Exemple: "Code civil > Livre I > Titre V > Chapitre I"
-        - **parent**: Information sur le conteneur parent
-        - **codeName** / **nomCode**: Nom du code concerné
-
-        💡 COMMENT UTILISER CES MÉTADONNÉES:
-
-        1. **Navigation intelligente**:
-           - Utiliser `liens.CITATION` pour explorer les articles référencés
-           - Utiliser `sommaire` pour comprendre la structure du texte
-           - Utiliser `articleVersions` pour voir l'évolution historique
-
-        2. **Validation juridique**:
-           - Vérifier `etat` pour confirmer la validité actuelle
-           - Vérifier `dateDebut` et `dateFin` pour la période d'application
-           - Vérifier `nota` pour les observations importantes
-
-        3. **Enrichissement de la réponse**:
-           - Utiliser `path`/`context` pour situer l'article dans son code
-           - Utiliser `liens.TXT_ASSOCIE` pour des textes complémentaires
-           - Utiliser `nature` pour qualifier le type de texte
-
-        4. **Citations et références**:
-           - Utiliser `nor` pour les références administratives
-           - Utiliser `dateSignature` et `datePubli` pour dater précisément
-           - Utiliser `ministere`/`autorite` pour identifier l'émetteur
-
-    Répondre factuellement en fournissant le titre et le lien direct vers Légifrance.
-    Ajouter le contenu principal et l'intérêt juridique de l'article si pertinent.
-
-    ⚠️ EXPLOITER LES LIENS: Si pertinent, mentionner les articles liés (liens.CITATION)
-    pour permettre à l'utilisateur d'approfondir sa recherche.
-
-    WORKFLOW TYPIQUE:
-        1. Rechercher avec UN outil de recherche:
-           - rechercher_droit_francais_etendue() [recherche avancée]
-           - rechercher_droit_francais() [recherche rapide]
-           - consulter_code_francais() [codes spécifiques]
-           - jurisprudence_francaise() [jurisprudence]
-
-        2. Analyser les résultats et sélectionner les plus pertinents
-
-        3. Extraire l'ID de chaque résultat pertinent (champ 'id')
-
-        4. Appeler obtenir_article(id) pour obtenir le contenu complet
-
-        5. Analyser le contenu détaillé pour répondre à la question juridique
-
-    Examples:
-        # Exemple 1: Recherche dans le Code civil puis récupération
-        results = consulter_code_francais("Code civil", "mariage")
-        for result in results.get('results', []):
-            article_id = result.get('id')
-            if article_id:
-                full_content = obtenir_article(article_id)
-                # Analyser full_content...
-
-        # Exemple 2: Recherche jurisprudentielle puis récupération
-        results = jurisprudence_francaise("responsabilité médicale")
-        if results.get('results'):
-            premier_resultat_id = results['results'][0]['id']
-            decision_complete = obtenir_article(premier_resultat_id)
-
-        # Exemple 3: Recherche avancée puis récupération
-        results = rechercher_droit_francais_etendue(
-            query="télétravail",
-            fond="KALI",
-            page_size=5
-        )
-        for result in results.get('results', [])[:3]:  # 3 premiers résultats
-            convention = obtenir_article(result['id'])
-
-        # Exemple 4: Récupération directe si vous avez déjà l'ID
-        article = obtenir_article("LEGIARTI000006419316")  # Article 1240 du Code civil
+        Le contenu juridique 
     """
-    logger.debug(f"APPEL: obtenir_article(article_id='{article_id}')")
+
     try:
         # Validation des paramètres
-        if not article_id or not article_id.strip():
+        if not id or not id.strip():
             logger.error("ID article vide")
             return {"erreur": "L'ID de l'article ne peut pas être vide"}
 
         # Vérification de l'initialisation de l'API
         if legifranceapi is None:
-            logger.error("API LegiFrance non initialisée")
-            return {"erreur": "L'API LegiFrance n'est pas initialisée"}
+            logger.error("API Légifrance non initialisée")
+            return {"erreur": "L'API Légifrance n'est pas initialisée"}
 
-        logger.info(f"Récupération de l'article: {article_id}")
-        article = legifranceapi.article(article_id)
-        logger.info(f"Article récupéré avec succès: {article_id}")
+        article = legifranceapi.consult(id)
         return article
 
     except Exception as e:
-        logger.error(f"Erreur lors de la récupération de l'article '{article_id}': {e}")
+        logger.error(f"Erreur lors de la récupération de l'article '{id}': {e}")
         return {"erreur": f"Erreur de récupération d'article: {str(e)}"}
 
 
@@ -453,89 +339,29 @@ def obtenir_taxonomie_judilibre(
     key: Optional[str] = None,
     value: Optional[str] = None,
     context_value: Optional[str] = None,
-) -> List | Dict[str, Any]:
+) -> Any:
     """
-    📚 TAXONOMIE JUDILIBRE - Récupère les listes des termes pour construire des recherches.
-
-    Permet de récupérer les valeurs valides pour les filtres de recherche JudiLibre.
-
-    🎯 UTILISATIONS PRINCIPALES :
-
-    1. **Lister toutes les taxonomies disponibles** :
-       - Appeler sans paramètre : obtenir_taxonomie_judilibre()
-
-    2. **Obtenir toutes les valeurs d'une taxonomie** :
-       - obtenir_taxonomie_judilibre(taxonomy_id="jurisdiction") → toutes les juridictions
-       - obtenir_taxonomie_judilibre(taxonomy_id="chamber") → toutes les chambres
-       - obtenir_taxonomie_judilibre(taxonomy_id="type") → tous les types de décisions
-
-    3. **Obtenir l'intitulé d'une clé** :
-       - obtenir_taxonomie_judilibre(taxonomy_id="jurisdiction", key="cc") → "Cour de cassation"
-
-    4. **Obtenir la clé d'un intitulé** :
-       - obtenir_taxonomie_judilibre(taxonomy_id="jurisdiction", value="cour de cassation") → "cc"
-
-    5. **Taxonomies contextuelles** :
-       - obtenir_taxonomie_judilibre(taxonomy_id="chamber", context_value="cc") → chambres de la Cour de cassation
-       - obtenir_taxonomie_judilibre(taxonomy_id="location", context_value="tj") → tribunaux judiciaires
-
-    📋 TAXONOMIES DISPONIBLES :
-
-    **✅ VALEURS COURANTES (utilisables directement sans taxonomie) :**
-
-    - **jurisdiction** : Juridictions
-      Valeurs : cc (Cour de cassation), ca (Cour d'appel), tj (Tribunal judiciaire), tcom (Tribunal de commerce)
-
-    - **type** : Types de décision
-      Valeurs : arret, ordonnance, qpc, saisie
-
-    - **solution** : Solutions
-      Valeurs : cassation, cassation_partielle, rejet, annulation, irrecevabilite,
-                desistement, non-lieu, qpc
-
-    - **publication** : Niveaux de publication
-      Valeurs : b (Bulletin), r (Rapport), l (Lettre), c (Communiqué)
-
-    **📚 VALEURS NÉCESSITANT LA TAXONOMIE (nombreuses valeurs) :**
-
-    - **chamber** : Chambres (nécessite context_value: cc ou ca ou tj ou tcom)
-      Utilisez : obtenir_taxonomie_judilibre(taxonomy_id="chamber", context_value="cc")
-
-    - **formation** : Formations des juridictions
-      Utilisez : obtenir_taxonomie_judilibre(taxonomy_id="formation")
-
-    - **theme** : Matières (nomenclature Cour de cassation)
-      Utilisez : obtenir_taxonomie_judilibre(taxonomy_id="theme")
-
-    - **field** : Champs de contenu (expose, moyens, motivations, dispositif, etc.)
-      Utilisez : obtenir_taxonomie_judilibre(taxonomy_id="field")
-
-    - **location** : Codes et noms des sièges (nécessite context_value: ca ou tj ou tcom)
-      Utilisez : obtenir_taxonomie_judilibre(taxonomy_id="location", context_value="ca")
-                ou obtenir_taxonomie_judilibre(taxonomy_id="location", context_value="tj")
-                ou obtenir_taxonomie_judilibre(taxonomy_id="location", context_value="tcom")
-
-    - **filetype** : Types de documents associés
-      Utilisez : obtenir_taxonomie_judilibre(taxonomy_id="filetype")
-
+    Récupère les valeurs valides pour les filtres de recherche Judilibre (juridictions, chambres, solutions, etc.).
+    Utiliser les ressources en priorité pour connaître les valeurs possibles avant d'utiliser cette fonction.
+    
     Args:
-        taxonomy_id: Identifiant de la taxonomie (type, jurisdiction, chamber, etc.)
-        key: Clé pour récupérer l'intitulé complet
-        value: Intitulé pour récupérer la clé
+        taxonomy_id: Type de taxonomie (jurisdiction, chamber, solution, theme, location, etc.)
+        key: Clé pour obtenir l'intitulé complet
+        value: Intitulé pour obtenir la clé
         context_value: Contexte pour certaines taxonomies (cc, ca, tj)
 
     Returns:
-        Dictionnaire contenant les données de taxonomie
+        Données de taxonomie (liste ou dict selon les paramètres)
 
-    Examples:
-        # Lister toutes les juridictions
-        obtenir_taxonomie_judilibre(taxonomy_id="jurisdiction")
+    Exemples d'usage:
+        - obtenir_taxonomie_judilibre() → toutes les taxonomies
+        - obtenir_taxonomie_judilibre(taxonomy_id="chamber", context_value="cc") → chambres Cour de cassation
+        - obtenir_taxonomie_judilibre(taxonomy_id="location", context_value="ca") → cours d'appel
 
-        # Obtenir les chambres de la Cour de cassation
-        obtenir_taxonomie_judilibre(taxonomy_id="chamber", context_value="cc")
-
-        # Convertir une clé en nom
-        obtenir_taxonomie_judilibre(taxonomy_id="jurisdiction", key="cc")
+    Ressources utiles:
+        - judilibre://documentation/juridictions - Juridictions disponibles
+        - judilibre://documentation/chambres - Chambres de la Cour de cassation
+        - judilibre://documentation/solutions - Types de solutions
     """
     logger.debug(
         f"APPEL: obtenir_taxonomie_judilibre(taxonomy_id='{taxonomy_id}', key='{key}', value='{value}', context_value='{context_value}')"
@@ -543,14 +369,13 @@ def obtenir_taxonomie_judilibre(
 
     try:
         if judilibreapi is None:
-            logger.error("API JudiLibre non initialisée")
-            return {"erreur": "L'API JudiLibre n'est pas initialisée"}
+            logger.error("API Judilibre non initialisée")
+            return {"erreur": "L'API Judilibre n'est pas initialisée"}
 
         result = judilibreapi.taxonomy(
             taxonomy_id=taxonomy_id, key=key, value=value, context_value=context_value
         )
 
-        logger.info(f"Taxonomie récupérée: {taxonomy_id or 'all'}")
         return result
 
     except Exception as e:
@@ -560,7 +385,7 @@ def obtenir_taxonomie_judilibre(
 
 @mcp.tool
 def rechercher_jurisprudence_judilibre(
-    query: Optional[str] = None,
+    recherche: Optional[str] = None,
     juridiction: Optional[str] = None,
     localisation: Optional[str] = None,
     chambre: Optional[str] = None,
@@ -571,198 +396,61 @@ def rechercher_jurisprudence_judilibre(
     date_fin: Optional[str] = None,
     tri: str = "scorepub",
     ordre: str = "desc",
-    nombre_resultats: int = 10,
+    nombre_resultats: int = 20,
     page: int = 0,
-) -> List[Dict[str, Any]]:
+) -> Any:
     """
-    ⚖️ RECHERCHE DE JURISPRUDENCE dans la base JudiLibre (décisions de justice françaises).
-
-    🔍 OUTIL PRINCIPAL pour rechercher des décisions de justice de toutes les juridictions françaises.
-
-    📋 JURIDICTIONS DISPONIBLES (paramètre juridiction) :
-    Utilisez directement ces codes :
-    - **"cc"** : Cour de cassation (défaut)
-    - **"ca"** : Cours d'appel
-    - **"tj"** : Tribunaux judiciaires (ex-TGI/TI)
-    - **"ta"** : Tribunaux administratifs
-    - **"caa"** : Cours administratives d'appel
-    - **"ce"** : Conseil d'État
-    - **"tc"** : Tribunaux de commerce
-    - **"crc"** : Chambres régionales des comptes
-
-    ⚖️ CHAMBRES DE LA COUR DE CASSATION (paramètre chambre) :
-    ⚠️ IMPORTANT: Utilisez uniquement les CLÉS suivantes (pas les noms complets):
-
-    CLÉS À UTILISER POUR CHAMBER :
-    - **"pl"**     : Assemblée plénière
-    - **"mi"**     : Chambre mixte
-    - **"civ1"**   : Première chambre civile
-    - **"civ2"**   : Deuxième chambre civile
-    - **"civ3"**   : Troisième chambre civile
-    - **"comm"**   : Chambre commerciale financière et économique
-    - **"soc"**    : Chambre sociale
-    - **"cr"**     : Chambre criminelle
-    - **"creun"**  : Chambres réunies
-    - **"ordo"**   : Première présidence (Ordonnance)
-    - **"allciv"** : Toutes les chambres civiles
-    - **"other"**  : Autre
-
-    Exemple correct: chambre="civ1" (PAS "Première chambre civile")
-
-    📍 LOCALISATION PAR SIÈGE DE JURIDICTION (paramètre localisation) :
-    Permet de filtrer les décisions par le code du siège de juridiction ayant émis les décisions.
-
-    **Pour les Cours d'appel** (utilisez obtenir_taxonomie_judilibre pour la liste complète) :
-       Exemples : "ca_paris", "ca_lyon", "ca_versailles", "ca_aix-en-provence", "ca_bordeaux",
-                  "ca_toulouse", "ca_rennes", "ca_nimes", "ca_orleans", "ca_grenoble"
-
-    **Pour les Tribunaux judiciaires** (utilisez obtenir_taxonomie_judilibre pour la liste complète) :
-       Exemples : "tj06088" (Nice), "tj69123" (Lyon), "tj75101" (Paris), "tj13055" (Marseille)
-       Format : tj + code INSEE département + code tribunal
-
-    📂 TYPES DE DÉCISION (paramètre type_decision) :
-    Utilisez directement ces codes :
-    - **"arret"** : Arrêt
-    - **"ordonnance"** : Ordonnance
-    - **"qpc"** : Question prioritaire de constitutionnalité
-    - **"saisie"** : Saisie
-
-    🎯 SOLUTIONS (paramètre solution) :
-    Utilisez directement ces codes :
-    - **"cassation"** : Cassation de la décision
-    - **"cassation_partielle"** : Cassation partielle
-    - **"rejet"** : Rejet du pourvoi
-    - **"annulation"** : Annulation
-    - **"irrecevabilite"** : Irrecevabilité
-    - **"desistement"** : Désistement
-    - **"non-lieu"** : Non-lieu à statuer
-    - **"qpc"** : Question prioritaire de constitutionnalité
-
-    📰 NIVEAUX DE PUBLICATION (paramètre publication - filtrage automatique) :
-    - **"b"** : Bulletin (décisions les plus importantes)
-    - **"r"** : Rapport annuel
-    - **"l"** : Lettre de chambre
-    - **"c"** : Communiqué
-
-    💡 Pour les paramètres avec beaucoup de valeurs, utilisez la taxonomie :
-       obtenir_taxonomie_judilibre(taxonomy_id="chamber", context_value="cc") pour les chambres
-       obtenir_taxonomie_judilibre(taxonomy_id="theme") pour les thèmes/matières
-       obtenir_taxonomie_judilibre(taxonomy_id="formation") pour les formations
-       obtenir_taxonomie_judilibre(taxonomy_id="location", context_value="ca") pour toutes les cours d'appel
-       obtenir_taxonomie_judilibre(taxonomy_id="location", context_value="tj") pour tous les tribunaux
-
-    📊 TRI DES RÉSULTATS (paramètre tri) :
-    Utilisez directement ces codes :
-    - **"scorepub"** (défaut) : Pertinence + niveau de publication (recommandé)
-    - **"score"** : Pertinence uniquement
-    - **"date"** : Date de la décision
-
-    📐 ORDRE DU TRI (paramètre ordre) :
-    - **"desc"** (défaut) : Décroissant (du plus récent/pertinent au moins)
-    - **"asc"** : Croissant (du plus ancien/moins pertinent au plus)
-
-    Répondre factuellement en faisant un résumé des résultats trouvés et en indiquant les IDs des articles pertinents et en affichant le titre et le lien direct vers Légifrance.
-
-    ⚠️ ÉTAPE SUIVANTE OBLIGATOIRE :
-    Les résultats contiennent uniquement des APERÇUS. Pour obtenir le TEXTE COMPLET
-    d'une décision pertinente, vous DEVEZ utiliser :
-    → obtenir_decision_judilibre(decision_id)
-
-    L'ID de chaque décision se trouve dans le champ 'id' des résultats.
+    Recherche de jurisprudence dans la base Judilibre (décisions de toutes les juridictions françaises).
+    À utiliser en priorité pour la recherche jurisprudentielle.
 
     Args:
-        query: Texte de recherche (optionnel - si vide, retourne résultats vides)
-        juridiction: Code de juridiction (cc, ca, tj, ta, caa, ce, tc, crc)
-        localisation: Code du siège de juridiction (ex: "tj06088" pour Nice, "ca_lyon" pour Lyon)
-                     Utilisez obtenir_taxonomie_judilibre(taxonomy_id="location", context_value="ca" ou "tj")
-        chambre: ⚠️ Code de chambre - UTILISEZ LES CLÉS: "pl", "mi", "civ1", "civ2", "civ3",
-                 "comm", "soc", "cr", "creun", "ordo", "allciv", "other"
-                 Exemple: "civ1" pour Première chambre civile, "soc" pour Chambre sociale
-        type_decision: Type (arret, ordonnance, qpc, etc.)
-        theme: Matière juridique (obtenir via taxonomie)
-        solution: Type de solution (rejet, cassation, annulation, etc.)
-        date_debut: Date de début au format ISO (ex: 2023-01-15 ou 2023-01-15T00:00:00Z)
-        date_fin: Date de fin au format ISO
-        tri: Mode de tri (scorepub, score, date)
-        ordre: Ordre du tri (desc ou asc)
-        nombre_resultats: Nombre de résultats par page (max 50, défaut 10)
-        page: Numéro de page (commence à 0)
+        recherche: Texte de recherche
+        juridiction: Code juridiction (cc, ca, tj, tcom). Defaut : None (recherche dans toutes les juridictions)
+        localisation: Code siège. Format varie selon juridiction (très nombreux, donc à utiliser que si nécessaire). Défaut : None
+            Exemples: "ca_paris", "tj06088" (Nice), "ca_lyon"
+            Utiliser obtenir_taxonomie_judilibre(taxonomy_id="location", context_value="ca" ou "tj")
+        chambre: Code chambre - CLÉS: "pl", "mi", "civ1", "civ2", "civ3", "comm", "soc", "cr" Défaut : None
+            ⚠️ Utiliser les CLÉS, pas les noms complets
+        type_decision: Type de décision. Valeurs: arret, ordonnance, qpc, saisie. Défaut : None
+        theme: Code matière juridique (très nombreux, donc à utiliser que si nécessaire). Défaut : None
+            Utiliser obtenir_taxonomie_judilibre(taxonomy_id="theme") pour la liste
+        solution: Solution (cassation, rejet, annulation, etc.). Défaut : None
+        date_debut: Date début ISO (ex: 2023-01-15). Défaut : None
+        date_fin: Date fin ISO (ex: 2023-12-15). Défaut : None
+        tri: Ordre de tri. Valeurs: scorepub, score, date. Défaut: "scorepub"
+        ordre: Sens du tri (desc, asc). Défaut: "desc"
+        nombre_resultats: Résultats par page (max 50). Défaut: 20
+        page: Numéro de page (commence à 0). Défaut : 0
 
     Returns:
-        Liste des décisions avec :
-          * id: Identifiant unique (REQUIS pour obtenir_decision_judilibre)
-          * number: Numéro de la décision
-          * date: Date de la décision
-          * jurisdiction: Juridiction
-          * chamber: Chambre
-          * solution: ⭐ TYPE DE SOLUTION (rejet, cassation, etc.) ⭐
-          * score: Score de pertinence
-          * publication: Niveau de publication
+        Liste de décisions incluant les id.
+        Utiliser obtenir_decision_judilibre(id) pour le texte complet.
 
-    Examples:
-        # Recherche simple à la Cour de cassation
-        rechercher_jurisprudence_judilibre(
-            query="responsabilité médicale",
-            juridiction="cc"
-        )
-
-        # Recherche dans la Chambre sociale (utiliser la CLÉ "soc")
-        rechercher_jurisprudence_judilibre(
-            query="licenciement abusif",
-            juridiction="cc",
-            chambre="soc",
-            date_debut="2023-01-01",
-            date_fin="2024-12-31"
-        )
-
-        # Recherche dans la Première chambre civile (utiliser la CLÉ "civ1")
-        rechercher_jurisprudence_judilibre(
-            query="responsabilité contractuelle",
-            juridiction="cc",
-            chambre="civ1",
-            solution="cassation"
-        )
-
-        # Recherche au Tribunal judiciaire de Nice
-        rechercher_jurisprudence_judilibre(
-            query="bail commercial",
-            juridiction="tj",
-            localisation="tj06088",
-            tri="date",
-            ordre="desc"
-        )
-
-        # Recherche à la Cour d'appel de Lyon
-        rechercher_jurisprudence_judilibre(
-            query="responsabilité contractuelle",
-            juridiction="ca",
-            localisation="ca_lyon",
-            date_debut="2023-01-01"
-        )
-    """
-    logger.debug(
-        f"APPEL: rechercher_jurisprudence_judilibre(query='{query}', juridiction='{juridiction}')"
-    )
+    Ressources utiles:
+        - judilibre://documentation/juridictions - Codes de juridictions
+        - judilibre://documentation/chambres - Codes de chambres
+        - judilibre://documentation/localisations - Codes de localisations (sièges)
+        - judilibre://documentation/types-decision - Types de décision
+        - judilibre://documentation/themes - Thèmes (matières juridiques)
+        - judilibre://documentation/solutions - Types de solutions
+        - judilibre://documentation/options-tri - Options de tri (tri + ordre)
+   """
 
     try:
         if judilibreapi is None:
-            logger.error("API JudiLibre non initialisée")
-            return [{"erreur": "L'API JudiLibre n'est pas initialisée"}]
+            logger.error("API Judilibre non initialisée")
+            return [{"erreur": "L'API Judilibre n'est pas initialisée"}]
 
         # Conversion des paramètres en listes si fournis
-        jurisdiction_list = [juridiction] if juridiction else None
+        jurisdiction_list = [juridiction] if juridiction else ["cc", "ca", "tj", "tcom"] # Par défaut toutes les juridictions
         location_list = [localisation] if localisation else None
         chamber_list = [chambre] if chambre else None
         type_list = [type_decision] if type_decision else None
         theme_list = [theme] if theme else None
         solution_list = [solution] if solution else None
 
-        logger.info(
-            f"Recherche JudiLibre: '{query}' - Juridiction: {juridiction or 'toutes'} - Localisation: {localisation or 'toutes'}"
-        )
-
         results = judilibreapi.search(
-            query=query,
+            query=recherche,
             jurisdiction=jurisdiction_list,
             location=location_list,
             chamber=chamber_list,
@@ -778,182 +466,26 @@ def rechercher_jurisprudence_judilibre(
             resolve_references=True,  # Obtenir les intitulés complets
         )
 
-        logger.info(f"Résultats trouvés: {len(results)}")
-
         return results
 
     except Exception as e:
-        logger.error(f"Erreur lors de la recherche JudiLibre: {e}")
-        return [{"erreur": f"Erreur recherche: {str(e)}"}]
+        logger.error(f"Erreur lors de la recherche Judilibre: {e}")
+        return "Erreur lors de la recherche Judilibre"
 
 
 @mcp.tool
-def obtenir_decision_judilibre(decision_id: str) -> Dict[str, Any]:
+def consulter_decision_judilibre(decision_id: str) -> Any:
     """
-    📄 RÉCUPÉRATION COMPLÈTE d'une décision de justice depuis JudiLibre.
+    Récupère le contenu d'une décision de justice depuis Judilibre.
 
-    ⚠️ OUTIL OBLIGATOIRE après rechercher_jurisprudence_judilibre() ⚠️
-
-    Récupère le contenu intégral et structuré d'une décision de justice identifiée
-    par son ID unique.
-
-    📋 CONTENU COMPLET RETOURNÉ :
-
-    **MÉTADONNÉES** :
-    - Identifiant de la juridiction
-    - Identifiant de la chambre
-    - Formation
-    - Numéro de pourvoi
-    - ECLI (European Case Law Identifier)
-    - Code NAC
-    - Niveau de publication
-    - ⭐ Solution (REJET, CASSATION, etc.) ⭐
-    - Date de la décision
-
-    **TEXTE INTÉGRAL** :
-    - Texte complet de la décision
-    - Délimitations des zones :
-      * Introduction
-      * Exposé du litige
-      * Moyens
-      * Motivations
-      * Dispositif
-      * Moyens annexés
-
-    **ÉLÉMENTS ANNEXES** :
-    - Éléments de titrage
-    - Sommaire
-    - Documents associés (rapport, avis avocat général, communiqué, etc.)
-    - Textes appliqués
-    - Rapprochements de jurisprudence
+    Cette fonction est la DEUXIÈME ÉTAPE après rechercher_jurisprudence_judilibre() pour obtenir le texte complet.
 
     Args:
-        decision_id: Identifiant unique de la décision obtenu depuis
-                    rechercher_jurisprudence_judilibre() (champ 'id')
+        decision_id: ID unique de la décision (champ 'id' des résultats de recherche)
 
     Returns:
-        Dict contenant la décision complète avec cette STRUCTURE DÉTAILLÉE:
+        La décision complète.
 
-        📋 IDENTIFICATION DE LA DÉCISION:
-        - **id**: Identifiant unique (ex: "60794cff9ba5988459c47bf2")
-        - **number** / **numbers**: Numéro(s) de pourvoi (ex: ["00-15.781"])
-        - **jurisdiction**: Juridiction (cc, ca, tj, etc.)
-        - **chamber**: Chambre (civ1, civ2, soc, cr, comm, etc.)
-        - **type**: Type de décision (arret, ordonnance, qpc, etc.)
-        - **decision_date**: Date de la décision (ex: "2003-01-21")
-
-        📄 TEXTE INTÉGRAL STRUCTURÉ:
-        - **text**: Texte complet de la décision (délimité par zones)
-        - **zones**: Délimitation précise des parties (TRÈS UTILE):
-          * **moyens**: Position des moyens invoqués [{'start': 106, 'end': 160}]
-          * **motivations**: Position des motivations [{'start': 160, 'end': 1226}]
-          * **dispositif**: Position du dispositif [{'start': 4294, 'end': 4792}]
-          → Permet d'extraire facilement chaque partie du texte
-
-        ⚖️ SOLUTION ET PUBLICATION:
-        - **solution**: ⭐ TYPE DE DÉCISION (rejet, cassation, annulation, etc.) ⭐
-        - **publication**: Niveau de publication ["b" = Bulletin, "r" = Rapport, etc.]
-        - **particularInterest**: Décision d'intérêt particulier (true/false)
-
-        🏛️ CONTEXTE JURIDIQUE:
-        - **summary**: Résumé officiel de la décision (TRÈS IMPORTANT)
-        - **themes**: Liste des thèmes juridiques abordés
-          Exemple: ["chose jugée", "responsabilité contractuelle", "subrogation", ...]
-        - **nac**: Code NAC (nomenclature)
-        - **portalis**: Numéro Portalis
-
-        📚 RÉFÉRENCES ET RAPPROCHEMENTS:
-        - **visa**: Textes visés/appliqués
-          Exemple: [{"title": "Code des assurances L121-12"}]
-        - **rapprochements**: Jurisprudence citée ou similaire
-          Exemple: [{"title": "Chambre commerciale, 1991-06-04..."}]
-
-        📂 DOCUMENTS ASSOCIÉS:
-        - **files**: Documents joints (rapport, avis, communiqué, etc.)
-        - **titlesAndSummaries**: Autres titrages et sommaires
-
-        🔗 DÉCISION CONTESTÉE ET HISTORIQUE:
-        - **contested**: Décision attaquée
-          * **id**, **date**, **title**, **number**
-          Exemple: {"date": "2000-03-23", "title": "Cour d'appel de Limoges"}
-        - **forward**: Décision postérieure (si applicable)
-        - **timeline**: Historique de la procédure
-
-        🔍 DONNÉES TECHNIQUES:
-        - **source**: Source des données (ex: "dila")
-        - **update_date**: Date de mise à jour
-        - **partial**: Décision partielle (true/false)
-        - **legacy**: Données historiques
-
-        💡 COMMENT UTILISER CES MÉTADONNÉES:
-
-        1. **Analyse rapide**:
-           - Utiliser `summary` pour comprendre rapidement l'enjeu
-           - Vérifier `solution` pour connaître le résultat
-           - Consulter `themes` pour identifier les domaines juridiques
-
-        2. **Extraction du texte par zones**:
-           ```python
-           # Extraire les motivations
-           text = decision['text']
-           motivations_zones = decision['zones']['motivations']
-           for zone in motivations_zones:
-               motivations_text = text[zone['start']:zone['end']]
-           ```
-
-        3. **Navigation juridique**:
-           - Utiliser `visa` pour identifier les textes appliqués
-           - Utiliser `rapprochements` pour jurisprudence similaire
-           - Utiliser `contested` pour remonter la chaîne de décisions
-
-        4. **Qualification de la décision**:
-           - `publication = ["b"]` → Décision publiée au Bulletin (importante)
-           - `particularInterest = true` → Décision remarquable
-           - `chamber` + `jurisdiction` → Préciser l'autorité
-
-        5. **Enrichissement de la réponse**:
-           - Citer les thèmes juridiques (`themes`)
-           - Mentionner la décision contestée (`contested`)
-           - Indiquer les textes appliqués (`visa`)
-
-    Répondre factuellement en fournissant:
-    - Le numéro de la décision et la juridiction
-    - La solution (REJET, CASSATION, etc.)
-    - Le résumé officiel (summary)
-    - Les principaux thèmes juridiques
-    - Les zones pertinentes du texte (moyens, motivations, dispositif)
-
-    ⚠️ EXPLOITER LES ZONES: Utiliser `zones` pour extraire précisément
-    les parties pertinentes (motivations pour l'analyse, dispositif pour la solution).
-
-    ⚠️ MENTIONNER LES RÉFÉRENCES: Si pertinent, citer les textes appliqués (visa)
-    et les rapprochements de jurisprudence pour approfondir.
-
-    WORKFLOW TYPIQUE :
-        1. Rechercher : rechercher_jurisprudence_judilibre("responsabilité")
-        2. Analyser les résultats et identifier les décisions pertinentes
-        3. Extraire l'ID : decision_id = results['results'][0]['id']
-        4. Récupérer le texte complet : obtenir_decision_judilibre(decision_id)
-        5. Analyser le contenu détaillé pour la réponse juridique
-
-    Examples:
-        # Recherche puis récupération complète
-        results = rechercher_jurisprudence_judilibre(
-            query="responsabilité médicale",
-            juridiction="cc"
-        )
-
-        # Identifier une décision pertinente
-        for decision in results['results']:
-            if decision['⭐ SOLUTION ⭐'] == 'CASSATION':
-                decision_id = decision['id']
-
-                # Récupérer le texte complet
-                decision_complete = obtenir_decision_judilibre(decision_id)
-
-                # Analyser le texte intégral
-                texte = decision_complete.get('text')
-                motivations = decision_complete.get('zones', {}).get('motivations')
     """
     logger.debug(f"APPEL: obtenir_decision_judilibre(decision_id='{decision_id}')")
 
@@ -963,20 +495,10 @@ def obtenir_decision_judilibre(decision_id: str) -> Dict[str, Any]:
             return {"erreur": "L'ID de la décision ne peut pas être vide"}
 
         if judilibreapi is None:
-            logger.error("API JudiLibre non initialisée")
-            return {"erreur": "L'API JudiLibre n'est pas initialisée"}
+            logger.error("API Judilibre non initialisée")
+            return {"erreur": "L'API Judilibre n'est pas initialisée"}
 
-        logger.info(f"Récupération de la décision: {decision_id}")
-
-        decision = judilibreapi.decision(
-            decision_id=decision_id, resolve_references=True  # Obtenir les intitulés complets
-        )
-
-        # Mise en évidence de la solution dans le résultat
-        if decision and "solution" in decision:
-            decision["⭐ SOLUTION ⭐"] = decision["solution"].upper()
-
-        logger.info(f"Décision récupérée avec succès: {decision_id}")
+        decision = judilibreapi.consult(decision_id=decision_id)
         return decision
 
     except Exception as e:

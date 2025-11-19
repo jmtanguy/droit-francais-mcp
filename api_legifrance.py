@@ -13,17 +13,13 @@ Remarques :
 """
 
 import os
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
-
 import requests
+from datetime import datetime, timedelta, date
+from typing import Any, Dict, List, Optional
 from dotenv import load_dotenv
+from api_legifrance_query_builder import LegifranceQueryBuilder
 
-from api_legifrance_search_input import LegiFranceSearchInput
-from api_legifrance_search_output import LegiFranceSearchOutput
-
-
-class LegiFranceAPI:
+class LegifranceAPI:
     """
     Client pour l'API Légifrance
     """
@@ -188,29 +184,30 @@ class LegiFranceAPI:
     def search(
         self,
         query: Optional[str] = None,
-        fond: Optional[str] = None,
-        type_champ: str = "ALL",
-        type_recherche: str = "UN_DES_MOTS",
-        code_name: Optional[str] = None,
-        filtres_valeurs: Optional[Dict[str, List[str]]] = None,
-        filtres_dates: Optional[Dict[str, Dict[str, str]]] = None,
-        page_number: int = 1,
+        fond: Optional[str] = "ALL",
+        field_type: str = "ALL",
+        search_type: str = "TOUS_LES_MOTS_DANS_UN_CHAMP",
+        code: Optional[str] = None,
+        filters: Optional[Dict[str, List[str]]] = None,
+        date_start: Optional[str] = None,
+        date_end: Optional[str] = None,
+        page_number: int = 0,
         page_size: int = 10,
         sort: Optional[str] = None,
-        operateur: str = "ET",
+        operator: str = "ET",
         advanced_search: bool = False,
-    ) -> List[Dict[str, Any]]:
+        clean: bool = True
+        ) -> Any:
         """
-        Effectue une recherche dans l'API Légifrance avec support complet de toutes les fonctionnalités.
+        Effectue une recherche dans l'API Légifrance.
 
         Args:
             query (str, optional): Terme(s) de recherche textuelle.
-                Ignoré si search_input est fourni.
                 Si None et search_input est None, lève une ValueError.
 
             fond (str, optional): Fonds de recherche.
-                Ignoré si search_input est fourni.
                 Valeurs possibles (voir LegiFranceSearchInput.FONDS):
+                - ALL : Tous les fonds [DÉFAUT]
                 - JORF : Journal Officiel de la République Française
                 - CNIL : Commission Nationale de l'Informatique et des Libertés
                 - CETAT : Conseil d'État
@@ -219,16 +216,14 @@ class LegiFranceAPI:
                 - CONSTIT : Conseil Constitutionnel
                 - KALI : Conventions collectives
                 - CODE_DATE : Codes consolidés (par date)
-                - CODE_ETAT : Codes consolidés (par état juridique) [DÉFAUT]
+                - CODE_ETAT : Codes consolidés (par état juridique) 
                 - LODA_DATE : Lois, Ordonnances, Décrets, Arrêtés (par date)
                 - LODA_ETAT : Lois, Ordonnances, Décrets, Arrêtés (par état)
-                - ALL : Tous les fonds
                 - CIRC : Circulaires et instructions
                 - ACCO : Accords d'entreprise
-                Défaut: "CODE_ETAT"
+                Défaut: "ALL"
 
-            type_champ (str, optional): Type de champ dans lequel rechercher.
-                Ignoré si search_input est fourni.
+            field_type: (str, optional): Type de champ dans lequel rechercher.
                 Valeurs possibles (voir LegiFranceSearchInput.TYPE_CHAMP):
                 - ALL : Tous les champs [DÉFAUT]
                 - TITLE : Titre du texte
@@ -239,23 +234,20 @@ class LegiFranceAPI:
                 - ... (voir docstring de LegiFranceSearchInput.add_champ pour la liste complète)
                 Défaut: "ALL"
 
-            type_recherche (str, optional): Type de recherche effectuée.
-                Ignoré si search_input est fourni.
+            search_type: (str, optional): Type de recherche effectuée.
                 Valeurs possibles (voir LegiFranceSearchInput.TYPE_RECHERCHE):
-                - UN_DES_MOTS : Au moins un des mots [DÉFAUT]
-                - EXACTE : Expression exacte
+                - EXACTE : Expression exacte [DÉFAUT]
+                - UN_DES_MOTS : Au moins un des mots
                 - TOUS_LES_MOTS_DANS_UN_CHAMP : Tous les mots présents
                 - AUCUN_DES_MOTS : Aucun des mots (exclusion)
                 - AUCUNE_CORRESPONDANCE_A_CETTE_EXPRESSION : Expression absente (exclusion)
-                Défaut: "UN_DES_MOTS"
+                Défaut: "EXACTE"
 
-            code_name (str, optional): Nom du code à rechercher (uniquement pour fonds CODE_DATE/CODE_ETAT).
-                Ignoré si search_input est fourni.
+            code (str, optional): Nom du code à rechercher (uniquement pour fonds CODE_DATE/CODE_ETAT).
                 Exemples: "Code civil", "Code pénal", "Code du travail", etc.
                 Défaut: None (tous les codes)
 
-            filtres_valeurs (Dict[str, List[str]], optional): Filtres par valeurs textuelles.
-                Ignoré si search_input est fourni.
+            filters (Dict[str, List[str]], optional): Filtres par valeurs textuelles.
                 Format: {"facette": ["valeur1", "valeur2", ...]}
                 Exemples:
                     - {"NATURE": ["LOI", "ORDONNANCE"]}
@@ -264,40 +256,22 @@ class LegiFranceAPI:
                 Voir docstring de LegiFranceSearchInput.add_filtre_valeurs pour toutes les facettes.
                 Défaut: None (pas de filtres)
 
-            filtres_dates (Dict[str, Dict[str, str]], optional): Filtres par périodes de dates.
-                Ignoré si search_input est fourni.
-                Format: {"facette": {"start": "YYYY-MM-DD", "end": "YYYY-MM-DD"}}
 
-                ⚠️ IMPORTANT: Les filtres de dates ne sont PAS supportés par tous les fonds!
+            date_start (str, optional): Date de début/référence pour le filtre (format "YYYY-MM-DD").
+                Utilisé seul ou combiné avec date_end.
+                Seulement pour les fonds JORF,LODA_DATE,LODA_ETAT,JURI,CETAT,JUFI,CONSTIT,KALI,CIRC,ACCO.
+                Défaut: None
 
-                **FONDS SUPPORTANT LES FILTRES DE DATES:**
-                - JORF: DATE_SIGNATURE, DATE_PUBLICATION, DATE_PARUTION
-                - LODA_DATE, LODA_ETAT: DATE_SIGNATURE, DATE_PUBLICATION, DATE_VERSION
-                - JURI, CETAT, JUFI: DATE_DECISION, DATE_ARRET
-                - CONSTIT: DATE_DECISION
-                - KALI: DATE_PUBLICATION, DATE_EFFET
-                - CIRC: DATE_SIGNATURE, DATE_CREATION, DATE_EXPORT
-                - ACCO: DATE_CREATION, DATE_EFFET, DATE_DEPOT
-                - CNIL: DATE_DELIBERATION
-
-                **FONDS NE SUPPORTANT PAS LES FILTRES DE DATES:**
-                - CODE_DATE, CODE_ETAT: ❌ Utilisez uniquement les filtres de valeurs
-                  (states, codeNames) pour ces fonds
-
-                Exemples:
-                    - {"DATE_SIGNATURE": {"start": "2020-01-01", "end": "2023-12-31"}}  # Pour JORF, LODA
-                    - {"DATE_PUBLICATION": {"start": "2022-01-01", "end": "2022-12-31"}}  # Pour JORF, LODA, KALI
-                    - {"DATE_DECISION": {"start": "2021-01-01", "end": "2024-12-31"}}  # Pour JURI, CETAT
-
-                Voir docstring de LegiFranceSearchInput.add_filtre_dates pour toutes les facettes.
-                Défaut: None (pas de filtres de dates)
-
+            date_end (str, optional): Date de fin pour créer un intervalle (format "YYYY-MM-DD").
+                Nécessite date_start.
+                Défaut: None (date unique)
+            
             page_number (int, optional): Numéro de la page à récupérer.
                 Appliqué même si search_input est fourni (écrase la pagination de search_input).
                 Défaut: 1
 
             page_size (int, optional): Nombre de résultats par page.
-                Maximum: 100 (la valeur sera automatiquement limitée).
+                Maximum: 50 (la valeur sera automatiquement limitée).
                 Appliqué même si search_input est fourni (écrase la pagination de search_input).
                 Défaut: 10
 
@@ -313,106 +287,33 @@ class LegiFranceAPI:
                 - ID_ASC : Identifiant croissant
                 Défaut: None (tri par défaut de l'API - généralement PERTINENCE)
 
-            operateur (str, optional): Opérateur entre les champs de recherche.
-                Ignoré si search_input est fourni.
+            operator (str, optional): Opérateur entre les champs de recherche.
                 Valeurs possibles:
                 - ET : Tous les champs doivent correspondre (AND) [DÉFAUT]
                 - OU : Au moins un champ doit correspondre (OR)
                 Défaut: "ET"
 
             advanced_search (bool, optional): Active le mode recherche avancée.
-                Ignoré si search_input est fourni.
                 Défaut: False
 
         Returns:
-            Liste des résultats: [
-                        {
-                            "id": str,
-                            "title": str,
-                            "nature": str,
-                            "legalStatus": str,
-                            "dateDebut": str,
-                            "dateFin": str,
-                            "extracts": [...],
-                            ...
-                        },
-                        ...
-                    ]
+            Liste des résultats
 
 
         Raises:
-            ValueError: Si ni query ni search_input n'est fourni
-            ValueError: Si le fond, type_champ, type_recherche ou operateur est invalide
-            Exception: Si l'appel à l'API échoue
+            Exception: Si la requête échoue ou si les paramètres sont invalides
 
-        Examples:
-            >>> api = LegiFranceAPI()
-
-            >>> # Exemple 1 : Recherche simple
-            >>> results = api.search(
-            ...     query="mariage",
-            ...     fond="CODE_ETAT",
-            ...     code_name="Code civil",
-            ...     page_size=20
-            ... )
-
-            >>> # Exemple 2 : Recherche avec filtres
-            >>> results = api.search(
-            ...     query="divorce",
-            ...     fond="JORF",
-            ...     type_recherche="EXACTE",
-            ...     filtres_valeurs={"NATURE": ["LOI", "ORDONNANCE"]},
-            ...     filtres_dates={"DATE_SIGNATURE": {"start": "2020-01-01", "end": "2023-12-31"}},
-            ...     sort="SIGNATURE_DATE_DESC"
-            ... )
-
-            >>> # Exemple 3 : Recherche avancée avec critères complexes
-            >>> builder = LegiFranceSearchInput()
-            >>> builder.set_fond("LODA_DATE")
-            >>>
-            >>> # Critère principal dans le titre
-            >>> critere_titre = builder.create_critere("fonction publique", "TOUS_LES_MOTS_DANS_UN_CHAMP", proximite=2)
-            >>> builder.add_champ("TITLE", [critere_titre])
-            >>>
-            >>> # Critère dans les articles
-            >>> critere_article = builder.create_critere("rémunération", "UN_DES_MOTS")
-            >>> builder.add_champ("ARTICLE", [critere_article], operateur="OU")
-            >>>
-            >>> # Filtres
-            >>> builder.add_filtre_valeurs("NATURE", ["LOI", "DECRET"])
-            >>> builder.add_filtre_dates("DATE_SIGNATURE", "2020-01-01", "2023-12-31")
-            >>> builder.set_operateur_global("ET")
-            >>> builder.set_advanced_search(True)
-            >>>
-            >>> results = api.search(search_input=builder, page_size=50)
-
-            >>> # Exemple 4 : Recherche dans les conventions collectives
-            >>> results = api.search(
-            ...     query="télétravail",
-            ...     fond="KALI",
-            ...     filtres_valeurs={"IDCC": ["1880", "2120"]},
-            ...     page_size=30
-            ... )
-
-            >>> # Exemple 5 : Recherche jurisprudentielle
-            >>> results = api.search(
-            ...     query="responsabilité médicale",
-            ...     fond="JURI",
-            ...     type_champ="RESUMES",
-            ...     filtres_valeurs={"JURIDICTION_NATURE": ["COUR_CASSATION"]},
-            ...     sort="DATE_DECISION_DESC"
-            ... )
         """
         endpoint = f"{self.api_url}/search"
 
         # Mode simple : construire la requête à partir des paramètres
         if query is None:
-            raise ValueError("Le paramètre 'query' doit être fourni")
+            raise ValueError("Le paramètre 'recherche' doit être fourni")
 
-        queryBuilder = LegiFranceSearchInput()
+        queryBuilder = LegifranceQueryBuilder()
 
         # Définir le fonds (avec valeur par défaut)
-        fond = fond or "CODE_ETAT"
+        fond = fond or "ALL"
         if fond not in queryBuilder.FONDS.values():
             raise ValueError(
                 f"Fond invalide. Utilisez une des valeurs: {list(queryBuilder.FONDS.values())}"
@@ -420,40 +321,37 @@ class LegiFranceAPI:
         queryBuilder.set_fond(fond)
 
         # Valider et créer le critère de recherche
-        if type_recherche not in queryBuilder.TYPE_RECHERCHE.values():
+        if search_type not in queryBuilder.TYPE_RECHERCHE.values():
             raise ValueError(
                 f"Type de recherche invalide. Utilisez une des valeurs: {list(queryBuilder.TYPE_RECHERCHE.values())}"
             )
 
-        if type_champ not in queryBuilder.TYPE_CHAMP.values():
+        if field_type not in queryBuilder.TYPE_CHAMP.values():
             raise ValueError(
                 f"Type de champ invalide. Utilisez une des valeurs: {list(queryBuilder.TYPE_CHAMP.values())}"
             )
 
-        critere = queryBuilder.create_critere(query, type_recherche)
-        queryBuilder.add_champ(type_champ, [critere])
+        critere = queryBuilder.create_criteria(query, search_type)
+        queryBuilder.add_field(field_type, [critere])
 
         # Ajouter le filtre pour le nom du code si applicable
-        if (fond in ["CODE_ETAT", "CODE_DATE"]) and code_name:
-            queryBuilder.add_filtre_valeurs("TEXT_NOM_CODE", [code_name])
+        if (fond in ["CODE_ETAT", "CODE_DATE"]) and code:
+            queryBuilder.add_filtre("TEXT_NOM_CODE", [code])
 
         # Ajouter les filtres par valeurs
-        if filtres_valeurs:
-            for facette, valeurs in filtres_valeurs.items():
-                queryBuilder.add_filtre_valeurs(facette, valeurs)
+        if filters:
+            for facette, valeurs in filters.items():
+                queryBuilder.add_filtre(facette, valeurs)
 
         # Ajouter les filtres par dates
-        if filtres_dates:
-            for facette, dates in filtres_dates.items():
-                if "start" in dates and "end" in dates:
-                    queryBuilder.add_filtre_dates(facette, dates["start"], dates["end"])
-                elif "date" in dates:
-                    queryBuilder.add_filtre_date_unique(facette, dates["date"])
+        if date_start:
+            queryBuilder.add_dates( date_start, date_end)
+
 
         # Configurer l'opérateur global
-        if operateur not in ["ET", "OU"]:
+        if operator not in ["ET", "OU"]:
             raise ValueError("L'opérateur doit être 'ET' ou 'OU'")
-        queryBuilder.set_operateur_global(operateur)
+        queryBuilder.set_operator(operator)
 
         # Configurer la recherche avancée
         if advanced_search:
@@ -466,17 +364,19 @@ class LegiFranceAPI:
         if sort:
             queryBuilder.set_sort(sort)
 
+        # force la recherche sur des documents en vigueur
+        if fond in ["JORF","CODE_ETAT","CODE_DATE","LODA_DATE","LODA_ETAT"]:
+            queryBuilder.add_filtre("ARTICLE_LEGAL_STATUS", ["VIGUEUR"])
+
         # Construire le payload final
         payload = queryBuilder.build()
 
         try:
             response = requests.post(endpoint, headers=self._get_api_headers(), json=payload)
             response.raise_for_status()
-
-            searchExtractor = LegiFranceSearchOutput()
             json = response.json()
-            summary = searchExtractor.extract_full_summary(json)
-            return summary
+            summary = self.clean(json) if clean else json
+            return summary if summary else "Aucun résultat"
 
         except requests.exceptions.HTTPError as e:
             # Améliorer le message d'erreur avec les détails de la réponse
@@ -485,7 +385,7 @@ class LegiFranceAPI:
             # Ajouter les en-têtes de réponse pour le débogage
             if e.response.status_code == 403:
                 error_msg += "\n\n⚠️ Erreur 403 Forbidden - Causes possibles:"
-                error_msg += "\n1. Votre compte sandbox n'est pas abonné à l'API Légifrance"
+                error_msg += "\n1. Votre compte n'est pas abonné à l'API Légifrance"
                 error_msg += "\n2. Les permissions nécessaires ne sont pas activées"
                 error_msg += "\n3. Vérifiez votre abonnement sur https://piste.gouv.fr/"
 
@@ -508,7 +408,7 @@ class LegiFranceAPI:
         except requests.exceptions.RequestException as e:
             raise Exception(f"Erreur lors de la recherche: {e}")
 
-    def article(self, article_id: str) -> Dict[str, Any]:
+    def consult(self, id_: str, clean: bool = True) -> Any:
         """
         Récupère un article spécifique.
         Voir la documentation pour les types d'identifiants supportés.
@@ -519,55 +419,112 @@ class LegiFranceAPI:
         Returns:
             Données de l'article
         """
-        # Sélectionner l'endpoint en fonction du type d'identifiant
+        # Gérer les identifiants avec date (ex: LEGITEXT000006069565_31-12-2006)
+        if "_" in id_:
+            id_ = id_.split('_')[0]
 
-        if article_id.startswith("LEGIARTI"):
+        # Sélectionner l'endpoint en fonction du type d'identifiant
+        if id_.startswith("LEGIARTI") or id_.startswith("LEGISCTA"):
             # Articles de loi
             endpoint = f"{self.api_url}/consult/getArticle"
-            params = {"id": article_id}
+            params = {"id": id_}
 
-        elif article_id.startswith("LEGITEXT"):
+        elif id_.startswith("LEGITEXT"):
             # Textes légaux consolidés
             endpoint = f"{self.api_url}/consult/legiPart"
-            params = {"textId": article_id}
+            params = {"textId": id_,"date":date.today().isoformat()}  # Utiliser une date future pour obtenir la version la plus récente
 
-        elif article_id.startswith("JURITEXT"):
+        elif id_.startswith("JURITEXT"):
             # Jurisprudence
             endpoint = f"{self.api_url}/consult/juri"
-            params = {"textId": article_id}
+            params = {"textId": id_}
 
-        elif article_id.startswith("CNILTEXT"):
+        elif id_.startswith("CNILTEXT"):
+            # CNIL
             endpoint = f"{self.api_url}/consult/cnil"
-            params = {"textId": article_id}
+            params = {"textId": id_}
 
-        elif article_id.startswith("KALITEXT"):
+        elif id_.startswith("KALITEXT"):
             # Conventions collectives
             endpoint = f"{self.api_url}/consult/kaliText"
-            params = {"id": article_id}
+            params = {"id": id_}
 
-        elif article_id.startswith("KALIARTI"):
+        elif id_.startswith("KALIARTI"):
             # Conventions collectives
             endpoint = f"{self.api_url}/consult/kaliArticle"
-            params = {"id": article_id}
+            params = {"id": id_}
 
-        elif article_id.startswith("ACCOTEXT"):
+        elif id_.startswith("ACCOTEXT"):
+            # Accords d'entreprise
             endpoint = f"{self.api_url}/consult/acco"
-            params = {"id": article_id}
+            params = {"id": id_}
 
         else:
             # Journal officiel par defaut
             endpoint = f"{self.api_url}/consult/jorf"
-            params = {"textCid": article_id}
+            params = {"textCid": id_}
 
         try:
             response = requests.post(endpoint, headers=self._get_api_headers(), json=params)
             response.raise_for_status()
-            api_response = response.json()
+            api_response = self.clean( response.json() ) if clean else response.json()
             return api_response
 
         except requests.exceptions.RequestException as e:
-            raise Exception(f"Erreur lors de la récupération de l'article: {e}")
+            raise Exception(f"Erreur lors de la récupération de l'article")
 
 
-# La fonction main() a été déplacée vers test_api.py pour éviter les conflits avec FastMCP (pas de print() dans un module importé)
-# Utilisez test_api.py pour tester cette classe
+
+    def clean(self, x, depth=0, max_depth=8):
+        """
+        Nettoie un dictionnaire ou une liste en ne conservant que les clés autorisées à tous les niveaux
+        de la hiérarchie et en supprimant les valeurs None ou vides.
+        La descente dans la hiérarchie est limitée à max_depth niveaux (par défaut 4).
+
+        Clés conservées: id, title, text, values, datePublication, startDate, origine, nature,
+        natureJuridiction, solution, numeroAffaire, president, avocats, titre, texte, juridiction
+
+        Args:
+            x (dict or list): Dictionnaire ou liste à nettoyer.
+            depth (int): Niveau actuel de profondeur (usage interne).
+            max_depth (int): Profondeur maximale de descente (par défaut 4).
+
+        Returns:
+            dict or list: Structure nettoyée avec uniquement les clés autorisées à tous les niveaux.
+        """
+        # Liste des clés à conserver à tous les niveaux de la hiérarchie
+        allowed_keys = {
+            "id", "title", "text", "values", "datePublication", "startDate",
+            "origine", "nature", "natureJuridiction", "solution", "numeroAffaire",
+            "president", "avocats", "titre", "texte", "juridiction", "content"
+        }
+
+        # Arrêter la descente si on a atteint la profondeur maximale
+        if depth >= max_depth:
+            return None
+
+        if isinstance(x, dict):
+            cleaned = {}
+            for k, v in x.items():
+                if v:  # Ignorer les valeurs vides
+                    if k in allowed_keys and not isinstance(v, (dict, list)):
+                        # Clé autorisée : conserver la valeur
+                        cleaned[k] = v
+                    elif isinstance(v, (dict, list)):
+                        # Valeur est dict/list : descendre dans la hiérarchie
+                        cleaned_value = self.clean(v, depth + 1, max_depth)
+                        if cleaned_value:  # Ne garder que si le résultat n'est pas vide
+                            cleaned[k] = cleaned_value
+            return cleaned if cleaned else None
+
+        if isinstance(x, list):
+            # Si la liste contient uniquement des chaînes de caractères, la garder intacte
+            if x and all(isinstance(item, str) for item in x):
+                return x
+            # Sinon, traiter récursivement
+            l = [cleaned_v for v in x if v and (cleaned_v := self.clean(v, depth + 1, max_depth)) is not None]
+            return l if l else None
+
+        return x
+    
+

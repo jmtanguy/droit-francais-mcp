@@ -39,8 +39,10 @@ Licensed under the MIT License
 # IMPORTS ET INITIALISATION
 # ============================================================================
 
-from api_judilibre import JudiLibreAPI
-from api_legifrance import LegiFranceAPI
+from time import sleep
+
+from api_judilibre import JudilibreAPI
+from api_legifrance import LegifranceAPI
 
 # %%
 # ============================================================================
@@ -49,7 +51,7 @@ from api_legifrance import LegiFranceAPI
 # Crée une instance de l'API JudiLibre en mode sandbox
 # Le token OAuth sera récupéré automatiquement lors de la première requête
 
-api = JudiLibreAPI(sandbox=True)
+api = JudilibreAPI(sandbox=True)
 
 # %%
 # ============================================================================
@@ -94,12 +96,24 @@ api.taxonomy("chamber", context_value="tcom")
 # ============================================================================
 
 # Recherche simple dans la jurisprudence
-results = api.search(
-    query="responsabilité contractuelle", jurisdiction=["cc"], chamber=["civ1"], page_size=10
+api.search(
+    query="responsabilité contractuelle", jurisdiction=["cc"], chamber=["civ1"], page_size=2
 )
 
+# %%
+# ============================================================================
+# EXEMPLES SUPPLÉMENTAIRES - Décommenter pour tester
+# ============================================================================
+
+# Recherche simple dans la jurisprudence sur toutes les juridictions
+api.search(
+    query="responsabilité contractuelle",  page_size=5
+)
+
+
+#%%
 # Récupération d'une décision spécifique
-decision = api.decision("60794cff9ba5988459c47bf2")
+decision = api.consult("60c993fe7c5a5b81c05bdfc3")
 
 # Explorer toutes les taxonomies disponibles
 # all_taxonomies = api.taxonomy()
@@ -110,13 +124,62 @@ decision = api.decision("60794cff9ba5988459c47bf2")
 # ============================================================================
 # TESTS API LÉGIFRANCE - Décommenter pour tester
 # ============================================================================
-
-api_lf = LegiFranceAPI(sandbox=True)
-
+from api_legifrance import LegifranceAPI
+api_lf = LegifranceAPI(sandbox=False)
+# %%
 # Recherche dans le Code civil
-results = api_lf.search(query="mariage", fond="CODE_ETAT", code_name="Code civil", page_size=5)
+results = api_lf.search(query="mariage", fond="CODE_ETAT", code="Code civil" ,page_size=5)
+
+#%%
+# Recherche dans le fond JORF
+results = api_lf.search(query="crédit", fond="JORF",   page_size=5)
 
 # %%
 # Recherche article
-article = api_lf.article("LEGIARTI000006422334")
+article = api_lf.consult("LEGIARTI000006422500")
+text = api_lf.consult("LEGITEXT000006075116")
+text_date = api_lf.consult("LEGITEXT000006069565_31-12-2006")
+
+#%%
+text = api_lf.consult("JURITEXT000045940024")
+
+#%%
+api_lf.search(query="télétravail", fond="KALI", page_size=3)
+
 # %%
+# Test
+from api_legifrance import LegifranceAPI
+from time import sleep
+
+api_lf = LegifranceAPI(sandbox=True)
+
+#%%
+api_lf.search(query="crédit consommateur 2025",fond= "JORF", page_size=2, clean=True)
+
+#%%
+api_lf.search(query="responsabilité du courtier en crédit sur un montage in fine",fond= "ALL", page_size=2, clean=True)
+
+#%%
+api_lf.search(query="Cour d'appel de Paris 2 avril 2025",fond= "ALL", page_size=2, clean=True)
+
+
+#%%
+# Test
+result = api_lf.search(
+   query="caméra vidéo de surveillance",
+   fond="CNIL",
+   field_type="ALL",
+   date_start="2020-01-01", 
+   date_end="2022-01-01", 
+   page_size=2,
+   page_number=1,
+   sort="DATE_DESC"
+)
+
+result
+
+# %%
+# Testing all date facets with all fonds
+fonds = ["ALL", "JORF", "LODA_DATE", "LODA_ETAT", "JURI", "CETAT", "JUFI", "CONSTIT", "KALI", "CIRC", "ACCO", "CNIL", "CODE_DATE","CODE_ETAT"]
+facets = ["DATE_SIGNATURE", "DATE_PUBLICATION", "DATE_PARUTION", "LODA_DATE", "LODA_ETAT", "DATE_DECISION", "DATE_ARRET", "DATE_EFFET", "DATE_CREATION", "DATE_EXPORT", "DATE_DEPOT", "DATE_DELIBERATION"]
+
